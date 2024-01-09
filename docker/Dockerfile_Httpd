@@ -14,8 +14,10 @@ COPY ../. .
 COPY php/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY php/php.ini /usr/local/etc/php/php.ini
 COPY --from=composer:2.7.4 /usr/bin/composer /usr/bin/composer
+COPY php/crontab /etc/cron.d/crontab
 
 RUN chown -R www-data:www-data /var/www/html
 RUN a2enmod rewrite
+RUN crontab /etc/cron.d/crontab
 
 ENTRYPOINT ["docker/php/entrypoint.sh"]
