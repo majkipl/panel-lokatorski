@@ -1,0 +1,20 @@
+/* TABLE */
+
+.c-table {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+
+.c-row {
+    display: table-row;
+}
+
+.c-cell {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.first-letter-uppercase:first-letter {
+    text-transform: uppercase;
+}

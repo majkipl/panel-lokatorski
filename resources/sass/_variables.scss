@@ -1,7 +1,21 @@
-// Body
-$body-bg: #f8fafc;
+// Colors
+$black: #000000;
+$white: #ffffff;
+$grayGraphite: mix($white, $black, 8%); // #313131
+$grayCharcoal: mix($white, $black, 10%); // #aaaaaa
+$graySlate: mix($white, $black, 20%); // #444444
+$graySilver: mix($white, $black, 40%); // #666666
+$graySmoke: mix($white, $black, 50%); // #888888
+$grayCloudy: mix($white, $black, 80%); // #cccccc
+$grayPearl: mix($white, $black, 85%); // #dddddd
+$grayAsh: mix($white, $black, 90%); // #eeeeee
+$red: #a80509;
+$transparent: transparent;
+
+$inherit: inherit;
 
 // Typography
-$font-family-sans-serif: 'Nunito', sans-serif;
-$font-size-base: 0.9rem;
+$font-family-sans-serif: 'Montserrat', sans-serif;
+$font-size-base: 1rem;
 $line-height-base: 1.6;
+

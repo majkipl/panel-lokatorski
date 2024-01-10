@@ -1,0 +1,22 @@
+/* SECTION */
+
+section {
+    padding: 0 1rem;
+
+    @media (min-width: 1200px) {
+        padding: 0 2rem;
+    }
+
+    .section-header {
+        .section-header-headline,
+        .section-header-button {
+            margin-bottom: 0.9375rem;
+            margin-top: 0.9375rem;
+
+            @media (min-width: 768px) {
+                margin-bottom: 3.125rem;
+                margin-top: 3.125rem;
+            }
+        }
+    }
+}

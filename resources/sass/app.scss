@@ -4,5 +4,36 @@
 // Variables
 @import 'variables';
 
+// Hamburger
+@import 'plugins/hamburger';
+
+// SlidePushMenu
+@import "plugins/slidepushmenu_component";
+
+// Bootstrap Icons
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
+
+@import "styles/main";
+@import "styles/cta";
+@import "styles/nav";
+@import "styles/form";
+@import "styles/footer";
+
+@import "styles/section";
+@import "styles/section/login";
+@import "styles/section/dashboard";
+
+
+
+
+
+
+
+
+
+
+
+

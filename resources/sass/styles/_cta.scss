@@ -1,0 +1,54 @@
+/* CTA */
+
+.cta-button {
+    color: $white;
+    background-color: $black;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    display: block;
+    text-transform: uppercase;
+    border-radius: 0;
+    -webkit-transition: all 0.4s ease;
+    -moz-transition: all 0.4s ease;
+    -ms-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+    padding: 0.625rem 0.9375rem;
+
+    &:hover,
+    &:focus {
+        background-color: $red;
+        color: $white;
+        outline: none;
+    }
+}
+
+.cta-button-reverse {
+    color: $white;
+    background-color: $red;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    display: block;
+    text-transform: uppercase;
+    -webkit-transition: all 0.4s ease;
+    -moz-transition: all 0.4s ease;
+    -ms-transition: all 0.4s ease;
+    -o-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+    padding: 0.625rem 0.9375rem;
+
+    &:hover,
+    &:focus {
+        background-color: $black;
+        color: $white;
+        outline: none;
+    }
+}

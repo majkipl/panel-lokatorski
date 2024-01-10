@@ -1,12 +1,24 @@
 {
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
+    "file": "assets/bootstrap-icons-BOrJxbIo.woff",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
+    "file": "assets/bootstrap-icons-BtvjY1KL.woff2",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
+  },
+  "public/images/svg/form/chevron.svg": {
+    "file": "assets/chevron-BAeiV-TO.svg",
+    "src": "public/images/svg/form/chevron.svg"
+  },
   "resources/js/app.js": {
-    "file": "assets/app-CI1Bgkaz.js",
+    "file": "assets/app-ClIUT_f5.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
   },
   "resources/sass/app.scss": {
-    "file": "assets/app-D-sv12UV.css",
+    "file": "assets/app-Dv5SXkP3.css",
     "src": "resources/sass/app.scss",
     "isEntry": true
   }
