@@ -2,7 +2,7 @@
 
 namespace App\Domains\Auth\Application\Controllers;
 
-use app\Domains\Auth\Application\Requests\LoginRequest;
+use App\Domains\Auth\Application\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +28,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+//        return redirect()->intended(route('dashboard', absolute: false));
+
+        return redirect()->intended(route(auth()->user()->getRedirectRoute(), absolute: false));
     }
 
     /**
@@ -42,6 +44,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
