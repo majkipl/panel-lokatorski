@@ -1,0 +1,22 @@
+/* USERS */
+
+.table-users {
+    margin-top: 1.875rem;
+
+    .row {
+        padding-bottom: 0.625rem;
+        padding-top: 0.625rem;
+
+        &.row-head {
+            border-bottom: 2px solid $black;
+        }
+
+        a {
+            margin-left: 0.4375rem;
+            margin-right: 0.4375rem;
+        }
+    }
+    @media (min-width: 576px) {
+        margin-top: 0;
+    }
+}
