@@ -47,14 +47,8 @@ Route::middleware('auth')->group(function () {
             })->name('admin.payment.save');
 
             Route::get('/admin/lokatorzy', [TenantController::class, 'index'])->name('admin.tenant');
-
-            Route::get('/admin/lokatorzy/dodaj', function () {
-                return view('welcome');
-            })->name('admin.tenant.form');
-
-            Route::post('/admin/lokatorzy/dodaj', function () {
-                return view('welcome');
-            })->name('admin.tenant.save');
+            Route::get('/admin/lokatorzy/dodaj', [TenantController::class, 'form'])->name('admin.tenant.form');
+            Route::post('/admin/lokatorzy/dodaj', [TenantController::class, 'store'])->name('admin.tenant.save');
 
             Route::get('/admin/lokatorzy/blokuj/{user}', function () {
                 return view('welcome');

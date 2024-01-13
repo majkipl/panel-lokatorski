@@ -9,7 +9,6 @@ use App\Domains\User\Application\Queries\FindAllUsers\FindAllUsersQuery;
 use App\Domains\User\Application\Requests\StoreRequest;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
-use App\Domains\User\Domain\Models\User;
 use App\Http\Controllers\Controller;
 use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
@@ -33,5 +32,42 @@ class TenantController extends Controller
                 )
             ]
         );
+    }
+
+    /**
+     * @return View|\Illuminate\Foundation\Application|Factory|Application
+     */
+    public function form(): View|\Illuminate\Foundation\Application|Factory|Application
+    {
+        return view(
+            'admin.tenant.form',
+            [
+                'roles' => array_map(fn($case) => $case->value, UserRole::cases()),
+                'statuses' => array_map(fn($case) => $case->value, UserStatus::cases())
+            ]
+        );
+    }
+
+    /**
+     * @param StoreRequest $request
+     * @param CommandBus $commandBus
+     * @return RedirectResponse
+     */
+    public function store(StoreRequest $request, CommandBus $commandBus): RedirectResponse
+    {
+        $commandBus->dispatch(
+            command: new CreateUserCommand(
+                dto: new UserDTO(
+                    email: $request->email,
+                    firstname: $request->firstname,
+                    lastname: $request->lastname,
+                    password: $request->password,
+                    status: UserStatus::from($request->status),
+                    role: UserRole::from($request->role)
+                )
+            )
+        );
+
+        return redirect()->route('admin.tenant')->with('success', 'Form submitted successfully!');
     }
 }
