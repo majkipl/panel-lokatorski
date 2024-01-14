@@ -9,6 +9,7 @@ use App\Domains\User\Application\Queries\FindAllUsers\FindAllUsersQuery;
 use App\Domains\User\Application\Requests\StoreRequest;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
+use App\Domains\User\Domain\Models\User;
 use App\Http\Controllers\Controller;
 use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
@@ -69,5 +70,39 @@ class TenantController extends Controller
         );
 
         return redirect()->route('admin.tenant')->with('success', 'Form submitted successfully!');
+    }
+
+    /**
+     * @param User $user
+     * @param CommandBus $commandBus
+     * @return RedirectResponse
+     */
+    public function lock(User $user, CommandBus $commandBus): RedirectResponse
+    {
+        $commandBus->dispatch(
+            command: new UpdateUserStatusCommand(
+                id: $user->id,
+                status: UserStatus::INACTIVE->value
+            )
+        );
+
+        return redirect()->route('admin.tenant')->with('success', 'Change status successfully!');
+    }
+
+    /**
+     * @param User $user
+     * @param CommandBus $commandBus
+     * @return RedirectResponse
+     */
+    public function unlock(User $user, CommandBus $commandBus): RedirectResponse
+    {
+        $commandBus->dispatch(
+            command: new UpdateUserStatusCommand(
+                id: $user->id,
+                status: UserStatus::ACTIVE->value
+            )
+        );
+
+        return redirect()->route('admin.tenant')->with('success', 'Change status successfully!');
     }
 }

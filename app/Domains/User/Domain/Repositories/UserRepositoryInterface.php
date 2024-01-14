@@ -13,6 +13,13 @@ interface UserRepositoryInterface
     public function getAllUsers(): Collection;
 
     /**
+     * @param int $id
+     * @param string $status
+     * @return bool
+     */
+    public function updateStatus(int $id, string $status): bool;
+
+    /**
      * @param UserDTO $dto
      * @return bool
      */

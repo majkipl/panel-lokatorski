@@ -25,6 +25,18 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
+     * @param int $id
+     * @param string $status
+     * @return bool
+     */
+    public function updateStatus(int $id, string $status): bool
+    {
+        $user = $this->model->find($id);
+        $user->status = $status;
+        return $user->save();
+    }
+
+    /**
      * @param UserDTO $dto
      * @return bool
      */

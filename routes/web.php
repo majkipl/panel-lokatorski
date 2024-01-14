@@ -49,14 +49,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/admin/lokatorzy', [TenantController::class, 'index'])->name('admin.tenant');
             Route::get('/admin/lokatorzy/dodaj', [TenantController::class, 'form'])->name('admin.tenant.form');
             Route::post('/admin/lokatorzy/dodaj', [TenantController::class, 'store'])->name('admin.tenant.save');
-
-            Route::get('/admin/lokatorzy/blokuj/{user}', function () {
-                return view('welcome');
-            })->name('admin.tenant.lock');
-
-            Route::get('/admin/lokatorzy/odblokuj/{user}', function () {
-                return view('welcome');
-            })->name('admin.tenant.unlock');
+            Route::get('/admin/lokatorzy/blokuj/{user}', [TenantController::class, 'lock'])->name('admin.tenant.lock');
+            Route::get('/admin/lokatorzy/odblokuj/{user}', [TenantController::class, 'unlock'])->name('admin.tenant.unlock');
         });
     });
 });
