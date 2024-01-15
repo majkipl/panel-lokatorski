@@ -5,6 +5,7 @@ namespace App\Domains\User\Domain\Models;
 use App\Domains\User\Infrastructure\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,6 +45,15 @@ class User extends Authenticatable
     public function getRedirectRoute(): string
     {
         return $this->role . '.dashboard';
+    }
+
+
+    /**
+     * @return HasOne
+     */
+    public function account(): HasOne
+    {
+        return $this->hasOne(Account::class);
     }
 
     /**

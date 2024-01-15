@@ -3,6 +3,7 @@
 namespace App\Domains\User\Infrastructure\Repositories;
 
 use App\Domains\User\Application\DTO\UserDTO;
+use App\Domains\User\Domain\Models\Account;
 use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,18 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
+     * @param array $role
+     * @param string|null $status
+     * @return Collection
+     */
+    public function getUsersByStatusAndRole(array $role, ?string $status = null): Collection
+    {
+        return $this->model->when(!is_null($status), function ($query) use ($status) {
+            return $query->where('status', $status);
+        })->whereIn('role', $role)->get();
+    }
+
+    /**
      * @param int $id
      * @param string $status
      * @return bool
@@ -34,6 +47,15 @@ class UserRepository implements UserRepositoryInterface
         $user = $this->model->find($id);
         $user->status = $status;
         return $user->save();
+    }
+
+    /**
+     * @param int $id
+     * @return Account
+     */
+    public function getAccountByUserId(int $id): Account
+    {
+        return $this->model->find($id)->account;
     }
 
     /**
