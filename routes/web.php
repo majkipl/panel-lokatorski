@@ -2,6 +2,7 @@
 
 use App\Domains\Auth\Application\Controllers\LoginController;
 use App\Domains\Auth\Application\Controllers\RegisterController;
+use App\Domains\Payment\Application\Controllers\PaymentController;
 use App\Domains\User\Application\Controllers\TenantController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -34,17 +35,9 @@ Route::middleware('auth')->group(function () {
                 return view('welcome');
             })->name('billing.user');
 
-            Route::get('/admin/wplaty', function () {
-                return view('welcome');
-            })->name('admin.payment');
-
-            Route::get('/admin/wplaty/dodaj', function () {
-                return view('welcome');
-            })->name('admin.payment.form');
-
-            Route::post('/admin/wplaty/dodaj', function () {
-                return view('welcome');
-            })->name('admin.payment.save');
+            Route::get('/admin/wplaty', [PaymentController::class, 'index'])->name('admin.payment');
+            Route::get('/admin/wplaty/dodaj', [PaymentController::class, 'form'])->name('admin.payment.form');
+            Route::post('/admin/wplaty/dodaj', [PaymentController::class, 'store'])->name('admin.payment.save');
 
             Route::get('/admin/lokatorzy', [TenantController::class, 'index'])->name('admin.tenant');
             Route::get('/admin/lokatorzy/dodaj', [TenantController::class, 'form'])->name('admin.tenant.form');

@@ -34,6 +34,20 @@ interface UserRepositoryInterface
     public function getAccountByUserId(int $id): Account;
 
     /**
+     * @param int $id
+     * @param float $amount
+     * @return void
+     */
+    public function addMoney(int $id, float $amount): void;
+
+    /**
+     * @param int $id
+     * @param float $amount
+     * @return void
+     */
+    public function subtractMoney(int $id, float $amount): void;
+
+    /**
      * @param UserDTO $dto
      * @return bool
      */

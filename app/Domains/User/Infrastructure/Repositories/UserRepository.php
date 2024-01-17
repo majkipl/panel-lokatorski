@@ -59,6 +59,26 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
+     * @param int $id
+     * @param float $amount
+     * @return void
+     */
+    public function addMoney(int $id, float $amount): void
+    {
+        $this->model->find($id)->account->addMoney($amount);
+    }
+
+    /**
+     * @param int $id
+     * @param float $amount
+     * @return void
+     */
+    public function subtractMoney(int $id, float $amount): void
+    {
+        $this->model->find($id)->account->subtractMoney($amount);
+    }
+
+    /**
      * @param UserDTO $dto
      * @return bool
      */
