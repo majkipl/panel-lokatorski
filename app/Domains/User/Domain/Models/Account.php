@@ -4,16 +4,20 @@ namespace App\Domains\User\Domain\Models;
 
 use App\Domains\Payment\Domain\Events\MoneyAdded;
 use App\Domains\Payment\Domain\Events\MoneySubtracted;
+use App\Domains\Payment\Domain\Models\Payment;
 use App\Domains\User\Domain\Events\AccountCreated;
 use App\Domains\User\Domain\Events\AccountDeleted;
 use App\Interfaces\Query\QueryBus;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Ramsey\Uuid\Uuid;
 use Spatie\EventSourcing\Projections\Projection;
 
 class Account extends Projection
 {
+    use HasFactory;
+
     /**
      * @var string
      */
@@ -34,6 +38,7 @@ class Account extends Projection
      */
     public function __construct(array $attributes = [])
     {
+        $attributes['uuid'] = $attributes['uuid'] ?? (string) Uuid::uuid4();
         parent::__construct($attributes);
 
         $this->queryBus = app(QueryBus::class);
@@ -112,5 +117,10 @@ class Account extends Projection
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }

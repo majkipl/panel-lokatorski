@@ -6,6 +6,9 @@ use App\Domains\Payment\Domain\Repositories\PaymentRepositoryInterface;
 
 class SaveHandler
 {
+    /**
+     * @param PaymentRepositoryInterface $repository
+     */
     public function __construct(protected PaymentRepositoryInterface $repository)
     {
     }

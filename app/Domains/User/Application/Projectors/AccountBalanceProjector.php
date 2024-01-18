@@ -2,6 +2,8 @@
 
 namespace App\Domains\User\Application\Projectors;
 
+use App\Domains\Payment\Domain\Events\MoneyAdded;
+use App\Domains\Payment\Domain\Events\MoneySubtracted;
 use App\Domains\User\Domain\Events\AccountCreated;
 use App\Domains\User\Domain\Events\AccountDeleted;
 use App\Domains\User\Domain\Models\Account;
@@ -22,6 +24,32 @@ class AccountBalanceProjector extends Projector
             $account->balance = 0;
             $account->writeable()->save();
         }
+    }
+
+    /**
+     * @param MoneyAdded $event
+     * @return void
+     */
+    public function onMoneyAdded(MoneyAdded $event)
+    {
+        $account = Account::uuid($event->accountUuid);
+
+        $account->balance += $event->amount;
+
+        $account->writeable()->save();
+    }
+
+    /**
+     * @param MoneySubtracted $event
+     * @return void
+     */
+    public function onMoneySubtracted(MoneySubtracted $event): void
+    {
+        $account = Account::uuid($event->accountUuid);
+
+        $account->balance -= $event->amount;
+
+        $account->writeable()->save();
     }
 
     /**
