@@ -2,17 +2,25 @@
 
 namespace App\Domains\User\Domain\Models;
 
+use App\Domains\Expense\Domain\Events\ExpenseAdded;
+use App\Domains\Expense\Domain\Events\ExpenseCanceled;
+use App\Domains\Expense\Domain\Models\Expense;
 use App\Domains\Payment\Domain\Events\MoneyAdded;
 use App\Domains\Payment\Domain\Events\MoneySubtracted;
 use App\Domains\Payment\Domain\Models\Payment;
+use App\Domains\User\Application\Queries\FindAccountsUuidByUserRoleAndStatus\FindAccountsUuidByUserRoleAndStatusQuery;
+use App\Domains\User\Domain\Enums\UserRole;
+use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Events\AccountCreated;
 use App\Domains\User\Domain\Events\AccountDeleted;
 use App\Interfaces\Query\QueryBus;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Ramsey\Uuid\Uuid;
 use Spatie\EventSourcing\Projections\Projection;
+use Spatie\EventSourcing\StoredEvents\Models\EloquentStoredEvent;
 
 class Account extends Projection
 {
@@ -95,6 +103,49 @@ class Account extends Projection
     }
 
     /**
+     * @param string $name
+     * @param float $amount
+     * @return void
+     */
+    public function addExpense(string $name, float $amount): void
+    {
+        $participants = $this->queryBus->ask(
+            query: new FindAccountsUuidByUserRoleAndStatusQuery(
+                status: UserStatus::ACTIVE->value,
+                role: [UserRole::ADMIN->value, UserRole::USER->value]
+            )
+        );
+
+        event(
+            new ExpenseAdded(
+                accountUuid: $this->uuid,
+                name: $name,
+                amount: $amount,
+                participants: $participants
+            )
+        );
+    }
+
+    /**
+     * @param int $eventId
+     * @return void
+     */
+    public function cancelExpense(int $eventId): void
+    {
+        $eventCanceled = EloquentStoredEvent::find($eventId)->toStoredEvent();
+
+        event(
+            new ExpenseCanceled(
+                accountUuid: $this->uuid,
+                name: '[CANCELED] ' . $eventCanceled->event->name,
+                amount: $eventCanceled->event->amount,
+                eventId: $eventId,
+                participants: $eventCanceled->event->participants
+            )
+        );
+    }
+
+    /**
      * @return void
      */
     public function remove()
@@ -119,8 +170,19 @@ class Account extends Projection
         return $this->belongsTo(User::class);
     }
 
-    public function payments()
+    /**
+     * @return HasMany
+     */
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
     }
 }

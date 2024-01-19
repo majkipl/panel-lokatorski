@@ -2,6 +2,7 @@
 
 use App\Domains\Auth\Application\Controllers\LoginController;
 use App\Domains\Auth\Application\Controllers\RegisterController;
+use App\Domains\Expense\Application\Controllers\ExpenseController;
 use App\Domains\Payment\Application\Controllers\PaymentController;
 use App\Domains\User\Application\Controllers\TenantController;
 use App\Http\Controllers\DashboardController;
@@ -10,21 +11,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
 Route::middleware('auth')->group(function () {
     Route::middleware('inRoles:user|admin')->group(function () {
-        Route::get('/wydatki', function () {
-            return view('welcome');
-        })->name('expense');
-
-        Route::get('/wydatki/dodaj', function () {
-            return view('welcome');
-        })->name('expense.form');
-
-        Route::get('/wydatki/anuluj/{id}', function () {
-            return view('welcome');
-        })->name('expense.cancel');
-
-        Route::post('/wydatki/dodaj', function () {
-            return view('welcome');
-        })->name('expense.save');
+        Route::get('/wydatki', [ExpenseController::class, 'index'])->name('expense');
+        Route::get('/wydatki/dodaj', [ExpenseController::class, 'form'])->name('expense.form');
+        Route::get('/wydatki/anuluj/{id}', [ExpenseController::class, 'cancel'])->name('expense.cancel');
+        Route::post('/wydatki/dodaj', [ExpenseController::class, 'store'])->name('expense.save');
 
         Route::get('/rozliczenia', function () {
             return view('welcome');

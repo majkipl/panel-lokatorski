@@ -9,13 +9,14 @@ use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Infrastructure\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class UserRepositoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_get_all_users()
     {
         // Create some users
@@ -31,7 +32,7 @@ class UserRepositoryTest extends TestCase
         $this->assertCount(3, $users);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_get_users_by_status_and_role()
     {
         // Create some users with specific roles and statuses
@@ -50,7 +51,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($user1->id, $users->first()->id);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_update_user_status()
     {
         // Create a user
@@ -75,7 +76,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($newStatus, $updatedUser->status);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_get_account_by_user_id()
     {
         // Create a user with an associated account
@@ -92,7 +93,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($user->account->user_id, $user->id);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_add_money_to_user_account()
     {
         // Create a user with an associated account
@@ -114,7 +115,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($initialBalance + $amountToAdd, $user->account->refresh()->balance);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_subtract_money_from_user_account()
     {
         // Create a user with an associated account
@@ -136,7 +137,7 @@ class UserRepositoryTest extends TestCase
         $this->assertEquals($initialBalance - $amountToSubtract, $user->account->refresh()->balance);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function test_create_new_user()
     {
         $email = fake()->safeEmail();

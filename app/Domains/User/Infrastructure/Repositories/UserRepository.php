@@ -60,6 +60,17 @@ class UserRepository implements UserRepositoryInterface
 
     /**
      * @param int $id
+     * @param string $name
+     * @param float $amount
+     * @return void
+     */
+    public function addExpense(int $id, string $name, float $amount): void
+    {
+        $this->model->find($id)->account->addExpense($name, $amount);
+    }
+
+    /**
+     * @param int $id
      * @param float $amount
      * @return void
      */

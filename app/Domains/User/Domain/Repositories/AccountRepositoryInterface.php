@@ -9,6 +9,13 @@ interface AccountRepositoryInterface
 {
     /**
      * @param string $uuid
+     * @param int $id
+     * @return void
+     */
+    public function cancelExpense(string $uuid, int $id): void;
+
+    /**
+     * @param string $uuid
      * @return User
      */
     public function getUserByAccountUuid(string $uuid): User;
