@@ -2,6 +2,7 @@
 
 use App\Domains\Auth\Application\Controllers\LoginController;
 use App\Domains\Auth\Application\Controllers\RegisterController;
+use App\Domains\Billing\Application\Controllers\BillingController;
 use App\Domains\Expense\Application\Controllers\ExpenseController;
 use App\Domains\Payment\Application\Controllers\PaymentController;
 use App\Domains\User\Application\Controllers\TenantController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::middleware('inRoles:user|admin')->group(function () {
         Route::get('/wydatki', [ExpenseController::class, 'index'])->name('expense');
@@ -16,14 +18,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/wydatki/anuluj/{id}', [ExpenseController::class, 'cancel'])->name('expense.cancel');
         Route::post('/wydatki/dodaj', [ExpenseController::class, 'store'])->name('expense.save');
 
-        Route::get('/rozliczenia', function () {
-            return view('welcome');
-        })->name('billing');
+        Route::get('/rozliczenia', [BillingController::class, 'billing'])->name('billing');
 
         Route::middleware('role:admin')->group(function () {
-            Route::get('/rozliczenia/{user}', function () {
-                return view('welcome');
-            })->name('billing.user');
+            Route::get('/rozliczenia/{user}', [BillingController::class, 'billing'])->name('billing.user');
 
             Route::get('/admin/wplaty', [PaymentController::class, 'index'])->name('admin.payment');
             Route::get('/admin/wplaty/dodaj', [PaymentController::class, 'form'])->name('admin.payment.form');

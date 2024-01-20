@@ -1,0 +1,95 @@
+/* BILLING */
+
+.table-billing {
+    margin-top: 1.875rem;
+
+    p {
+        margin-bottom: 0;
+    }
+
+    .row-year {
+        background-color: $grayPearl;
+        border: 1px solid $graySmoke;
+        margin-bottom: 1.875rem;
+
+        .year-name {
+            span {
+                display: flex;
+                font-size: 2rem;
+                font-weight: 700;
+
+                @media (min-width: 1200px) {
+                    transform: rotate(-90deg);
+                    font-size: 2rem;
+                }
+            }
+        }
+
+        @media (min-width: 1200px) {
+            border: 0;
+        }
+    }
+
+    .row-month {
+        background-color: $grayAsh;
+        border: 1px solid $grayCharcoal;
+
+        .month-name {
+            padding-top: 0.9375rem;
+            padding-bottom: 0.9375rem;
+
+            span {
+                display: flex;
+                font-size: 1.5rem;
+                font-weight: 700;
+
+                @media (min-width: 1200px) {
+                    transform: rotate(-90deg);
+                    font-size: 0.875rem;
+                }
+            }
+
+            @media (min-width: 1200px) {
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            border: 0;
+            margin-bottom: 1.875rem;
+            padding-bottom: 1.875rem;
+        }
+    }
+
+    .row-content {
+        background-color: $white;
+        padding-top: 1.875rem;
+        padding-bottom: 1.875rem;
+
+        @media (min-width: 1200px) {
+            min-height: 6.25rem;
+        }
+    }
+
+    .row-item {
+        border-bottom: 1px solid $grayAsh;
+        margin-bottom: 0.625rem;
+        padding-top: 0.3125rem;
+        padding-bottom: 0.3125rem;
+
+        @media (min-width: 768px) {
+            border-bottom: 0;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+    }
+
+    .row-head {
+        border-bottom: 2px solid $black;
+    }
+
+    @media (min-width: 576px) {
+        margin-top: 1.875rem;
+    }
+}

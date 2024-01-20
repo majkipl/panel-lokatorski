@@ -15,6 +15,7 @@ use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ExpenseProjectorTest extends TestCase
@@ -32,7 +33,7 @@ class ExpenseProjectorTest extends TestCase
         $this->projector = new ExpenseProjector($this->commandBus, $this->queryBus);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnAccountCreated()
     {
         // Turn off observer
@@ -57,7 +58,7 @@ class ExpenseProjectorTest extends TestCase
 
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnExpenseAdded()
     {
         // Get instance model
@@ -96,7 +97,7 @@ class ExpenseProjectorTest extends TestCase
         //todo: assert data or count(expenses)
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnExpenseCanceled()
     {
         // Get instance model
@@ -135,7 +136,7 @@ class ExpenseProjectorTest extends TestCase
         $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetAll()
     {
         // Get instance model
@@ -167,7 +168,7 @@ class ExpenseProjectorTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetExpensesForNow()
     {
         $user = User::factory()->create();
@@ -195,7 +196,7 @@ class ExpenseProjectorTest extends TestCase
         $this->assertEquals($count_expenses, count($data)/2);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetTodaysExpenses()
     {
         $user = User::factory()->create();

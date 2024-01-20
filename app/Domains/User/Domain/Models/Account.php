@@ -2,6 +2,7 @@
 
 namespace App\Domains\User\Domain\Models;
 
+use App\Domains\Billing\Domain\Models\Billing;
 use App\Domains\Expense\Domain\Events\ExpenseAdded;
 use App\Domains\Expense\Domain\Events\ExpenseCanceled;
 use App\Domains\Expense\Domain\Models\Expense;
@@ -184,5 +185,13 @@ class Account extends Projection
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function billings(): HasMany
+    {
+        return $this->hasMany(Billing::class);
     }
 }
