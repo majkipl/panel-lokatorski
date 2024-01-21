@@ -60,6 +60,7 @@ var starter = {
         init: function () {
             starter.main.click();
             starter.main.error_scroll();
+            starter.plugins.ApexCharts.init();
 
             $('.lds-css').fadeOut();
         },
@@ -176,4 +177,185 @@ var starter = {
             }
         },
     },
+
+    plugins: {
+        ApexCharts: {
+            init: function () {
+                const token = $('meta[name="api-token"]').attr('content');
+                if (token) {
+                    if ($('#participant').length) {
+                        axios.get('/api/user/expense', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        })
+                            .then((response) => {
+                                starter.plugins.ApexCharts.donut(Object.keys(response.data), Object.values(response.data));
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                            });
+                    }
+
+                    if ($('#balance').length) {
+                        axios.get('/api/user/balance', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        })
+                            .then((response) => {
+                                let array = [];
+
+                                $.each(response.data, function (key, value) {
+                                    array.push([parseInt(key) * 1000, parseFloat(value.toFixed(2))]);
+                                });
+
+                                starter.plugins.ApexCharts.area(array);
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                            });
+                    }
+                }
+            },
+            donut: function (labels, series) {
+                // Generowanie odcieni szarości
+                let shadesOfGray = [];
+                let step = Math.floor(255 / labels.length);
+                for (let i = 0; i < labels.length; i++) {
+                    let grayValue = (i * step).toString(16);
+                    if (grayValue.length < 2) {
+                        grayValue = '0' + grayValue;
+                    }
+                    shadesOfGray.push('#' + grayValue + grayValue + grayValue);
+                }
+
+                const options = {
+                    chart: {
+                        type: 'donut'
+                    },
+                    series: series,
+                    labels: labels,
+                    colors: shadesOfGray, // Dodanie odcieni szarości do opcji wykresu
+                    tooltip: {
+                        y: {
+                            formatter: function (val) {
+                                return val + 'zł'; // Formatowanie kwoty w złotówkach
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom' // Umieszczenie legendy na dole wykresu
+                    }
+                };
+
+                var chart = new ApexCharts(document.querySelector("#participant"), options);
+
+                chart.render();
+            },
+            area: function (data) {
+                let firstKey = data[0][0];
+
+                let options = {
+                    series: [{
+                        name: 'SALDO',
+                        color: '#888888',
+                        data: data
+                    }],
+                    chart: {
+                        id: 'area-datetime',
+                        type: 'area',
+                        height: 400,
+                        zoom: {
+                            autoScaleYaxis: true
+                        },
+                        defaultLocale: 'pl',
+                        locales: [{
+                            name: 'pl',
+                            options: {
+                                months: ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'],
+                                shortMonths: ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'],
+                            }
+                        }],
+                    },
+                    annotations: {
+                        yaxis: [{
+                            y: 30,
+                            borderColor: '#999',
+                            label: {
+                                show: true,
+                                text: 'Support',
+                                style: {
+                                    color: "#fff",
+                                    background: '#888888'
+                                }
+                            }
+                        }],
+                        xaxis: [{
+                            x: firstKey,
+                            borderColor: '#999',
+                            yAxisIndex: 0,
+                            label: {
+                                show: true,
+                                text: 'Rally',
+                                style: {
+                                    color: "#fff",
+                                    background: '#888888'
+                                }
+                            }
+                        }]
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    markers: {
+                        size: 0,
+                        style: 'hollow',
+                        colors: ['#888888']
+                    },
+                    xaxis: {
+                        type: 'datetime',
+                        min: firstKey,
+                        tickAmount: 6,
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'dd MMM yyyy'
+                        },
+                        enabledOnSeries: false,
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.9,
+                            stops: [0, 100]
+                        },
+                        colors: ['#888888']
+                    },
+                    stroke: {
+                        show: true,
+                        curve: 'straight',
+                        lineCap: 'butt',
+                        colors: ['#444444'],
+                        width: 2,
+                        dashArray: 0,
+                    },
+                };
+
+                let chart = new ApexCharts(document.querySelector("#balance"), options);
+                chart.render();
+
+                let currentDate = new Date();
+                currentDate.setFullYear(currentDate.getFullYear() - 1);
+
+                chart.zoomX(
+                    currentDate.getTime(),
+                    Date.now()
+                );
+            },
+        },
+    }
+
 };

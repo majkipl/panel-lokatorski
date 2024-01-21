@@ -1,17 +1,17 @@
 <?php
 
-namespace Tests\Domains\Billing\Application\Projectors;
+namespace Tests\Domains\Balance\Application\Projectors;
 
-use App\Domains\Billing\Application\Classes\BillingData;
-use App\Domains\Billing\Application\Classes\MonthlyData;
-use App\Domains\Billing\Application\Commands\Save\SaveCommand;
-use App\Domains\Billing\Application\Commands\UpdateProjection\UpdateProjectionCommand;
-use App\Domains\Billing\Application\Projectors\BillingProjector;
+use App\Domains\Balance\Application\Commands\Save\SaveCommand;
+use App\Domains\Balance\Application\Commands\UpdateProjection\UpdateProjectionCommand;
+use App\Domains\Balance\Application\Projectors\BalanceProjector;
+use App\Domains\Balance\Application\Queries\FindLatestBalanceByAccountUuid\FindLatestBalanceByAccountUuidQuery;
 use App\Domains\Expense\Domain\Events\ExpenseAdded;
 use App\Domains\Expense\Domain\Events\ExpenseCanceled;
 use App\Domains\Payment\Domain\Events\MoneyAdded;
 use App\Domains\Payment\Domain\Events\MoneySubtracted;
 use App\Domains\User\Domain\Events\AccountCreated;
+use App\Domains\User\Domain\Models\User;
 use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
 use Carbon\Carbon;
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class BillingProjectorTest extends TestCase
+class BalanceProjectorTest extends TestCase
 {
     use DatabaseTransactions;
 
@@ -31,14 +31,32 @@ class BillingProjectorTest extends TestCase
         $commandBus = $this->createMock(CommandBus::class);
         $queryBus = $this->createMock(QueryBus::class);
 
+        // Create an instance of the projector
+        $projector = new BalanceProjector($commandBus, $queryBus);
+
+        Event::fake();
+
+        // Prepare event data
+        $accountAttributes = ['uuid' => fake()->uuid()];
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
+
+        $event = new AccountCreated($accountAttributes);
+        $event->setMetaData($metaData);
+
+        event($event);
+
+        Event::assertDispatched(AccountCreated::class, function ($event) use ($accountAttributes) {
+            return $event->accountAttributes['uuid'] === $accountAttributes['uuid'];
+        });
+
+        // Expect ask method to be called once
+        $queryBus->expects($this->once())->method('ask')->willReturn(new User(['created-at' => Carbon::now()->toDateTimeString()]));
+
         // Expect dispatching SaveCommand
         $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(SaveCommand::class));
 
-        // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
-
         // Call onAccountCreated method
-        $projector->onAccountCreated(new AccountCreated(['uuid' => fake()->uuid()]));
+        $projector->onAccountCreated($event);
     }
 
     #[Test]
@@ -49,7 +67,7 @@ class BillingProjectorTest extends TestCase
         $queryBus = $this->createMock(QueryBus::class);
 
         // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
+        $projector = new BalanceProjector($commandBus, $queryBus);
 
         // Prepare event data
         $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
@@ -72,8 +90,7 @@ class BillingProjectorTest extends TestCase
             return $event->accountUuid === $eventAccountUuid && $event->amount === $eventAmount;
         });
 
-        // Expect ask method to be called once
-        $queryBus->expects($this->once())->method('ask')->willReturn(serialize(new BillingData()));
+        $queryBus->expects($this->once())->method('ask')->willReturn(serialize([]));
 
         // Expect dispatching UpdateProjectionCommand
         $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
@@ -90,7 +107,7 @@ class BillingProjectorTest extends TestCase
         $queryBus = $this->createMock(QueryBus::class);
 
         // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
+        $projector = new BalanceProjector($commandBus, $queryBus);
 
         // Prepare event data
         $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
@@ -114,7 +131,7 @@ class BillingProjectorTest extends TestCase
         });
 
         // Expect ask method to be called once
-        $queryBus->expects($this->once())->method('ask')->willReturn(serialize(new BillingData()));
+        $queryBus->expects($this->once())->method('ask')->willReturn(serialize([]));
 
         // Expect dispatching UpdateProjectionCommand
         $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
@@ -131,7 +148,7 @@ class BillingProjectorTest extends TestCase
         $queryBus = $this->createMock(QueryBus::class);
 
         // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
+        $projector = new BalanceProjector($commandBus, $queryBus);
 
         // Prepare event data
         $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
@@ -159,7 +176,7 @@ class BillingProjectorTest extends TestCase
         });
 
         // Expect ask method to be called twice
-        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize(new BillingData()));
+        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize([]));
 
         // Expect dispatching UpdateProjectionCommand twice
         $commandBus->expects($this->atLeastOnce())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
@@ -176,7 +193,7 @@ class BillingProjectorTest extends TestCase
         $queryBus = $this->createMock(QueryBus::class);
 
         // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
+        $projector = new BalanceProjector($commandBus, $queryBus);
 
         // Prepare event data
         $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
@@ -206,7 +223,7 @@ class BillingProjectorTest extends TestCase
         });
 
         // Expect ask method to be called twice
-        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize(new BillingData()));
+        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize([]));
 
         // Expect dispatching UpdateProjectionCommand twice
         $commandBus->expects($this->atLeastOnce())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
@@ -216,42 +233,31 @@ class BillingProjectorTest extends TestCase
     }
 
     #[Test]
-    public function testGetBilling()
+    public function testGetBalance()
     {
-        // Mock CommandBus and QueryBus
+        // Given
+        $uuid = fake()->uuid();
+        $projection = serialize([time() => 100]); // Example projection data
+
         $commandBus = $this->createMock(CommandBus::class);
         $queryBus = $this->createMock(QueryBus::class);
 
-        // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
+        $queryBus->expects($this->once())
+            ->method('ask')
+            ->with(new FindLatestBalanceByAccountUuidQuery(uuid: $uuid))
+            ->willReturn($projection);
 
-        // Expect ask method to be called once
-        $queryBus->expects($this->once())->method('ask')->willReturn(serialize(new BillingData()));
+        $projector = new BalanceProjector(
+            commandBus: $commandBus,
+            queryBus: $queryBus
+        );
 
-        // Call getBilling method
-        $result = $projector->getBillling(fake()->uuid());
+        // When
+        $result = $projector->getBalance($uuid);
 
-        // Assert the result is an instance of BillingData
-        $this->assertInstanceOf(BillingData::class, $result);
-    }
-
-    #[Test]
-    public function testGetBillingForNow()
-    {
-        // Mock CommandBus and QueryBus
-        $commandBus = $this->createMock(CommandBus::class);
-        $queryBus = $this->createMock(QueryBus::class);
-
-        // Create an instance of the projector
-        $projector = new BillingProjector($commandBus, $queryBus);
-
-        // Expect ask method to be called once
-        $queryBus->expects($this->once())->method('ask')->willReturn(serialize(new BillingData()));
-
-        // Call getBillingForNow method
-        $result = $projector->getBilllingForNow(fake()->uuid());
-
-        // Assert the result is an instance of MonthlyData
-        $this->assertInstanceOf(MonthlyData::class, $result);
+        // Then
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        $this->assertEquals(unserialize($projection), $result);
     }
 }
