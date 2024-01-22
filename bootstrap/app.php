@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => OnlyGuestAllowedMiddleware::class
         ]);
     })
+    ->withEvents(
+        discover: glob(Application::getInstance()->path('Domains/*/*/Listeners'), GLOB_ONLYDIR)
+    )
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
