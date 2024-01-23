@@ -5,6 +5,7 @@ namespace App\Domains\User\Domain\Observers;
 use App\Domains\User\Application\Mails\CreateUserMail;
 use App\Domains\User\Domain\Models\Account;
 use App\Domains\User\Domain\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class UserObserver
@@ -17,8 +18,12 @@ class UserObserver
     {
         Account::createWithAttributes(['user_id' => $user->id]);
 
-        Mail::send(new CreateUserMail([
-            'user' => $user
-        ]));
+        try {
+            Mail::send(new CreateUserMail([
+                'user' => $user
+            ]));
+        } catch (\Exception $e) {
+            Log::error('Nie można wysłać e-maila: ' . $e->getMessage());
+        }
     }
 }

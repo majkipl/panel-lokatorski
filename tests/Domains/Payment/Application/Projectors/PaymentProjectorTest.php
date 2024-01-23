@@ -72,7 +72,6 @@ class PaymentProjectorTest extends TestCase
 
         $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
 
-        //todo: assert data or count(payments)
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -93,8 +92,6 @@ class PaymentProjectorTest extends TestCase
         );
 
         $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
-
-        //todo: assert data or count(payments)
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

@@ -7,18 +7,20 @@ use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Infrastructure\Repositories\UserRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class UserRepositoryTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     #[Test]
     public function test_get_all_users()
     {
+        //todo: modify test on mock
+
         // Create some users
         User::factory()->count(3)->create();
 
@@ -35,6 +37,8 @@ class UserRepositoryTest extends TestCase
     #[Test]
     public function test_get_users_by_status_and_role()
     {
+        //todo: modify test on mock
+
         // Create some users with specific roles and statuses
         $user1 = User::factory()->create(['role' => 'admin', 'status' => 'active']);
         $user2 = User::factory()->create(['role' => 'user', 'status' => 'active']);

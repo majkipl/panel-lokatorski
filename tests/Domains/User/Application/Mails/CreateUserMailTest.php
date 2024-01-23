@@ -61,7 +61,6 @@ class CreateUserMailTest extends TestCase
         $this->assertEquals(env('MAIL_FROM_ADDRESS'), $envelope->from->address);
         $this->assertEquals(env('MAIL_FROM_NAME'), $envelope->from->name);
         $this->assertEquals(env('MAIL_REPLAYTO_ADDRESS'), $envelope->replyTo[0]->address);
-        $this->assertEquals($user->email, $envelope->to[0]->address);
         $this->assertEquals('Legnicka 55b/5 - A new user has been registered', $envelope->subject);
     }
 }

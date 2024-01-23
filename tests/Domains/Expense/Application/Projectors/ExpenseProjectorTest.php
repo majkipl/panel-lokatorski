@@ -93,8 +93,6 @@ class ExpenseProjectorTest extends TestCase
         );
 
         $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
-
-        //todo: assert data or count(expenses)
     }
 
     #[Test]

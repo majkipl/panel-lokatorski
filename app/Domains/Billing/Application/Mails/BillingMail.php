@@ -1,21 +1,17 @@
 <?php
 
-namespace App\Domains\User\Application\Mails;
+namespace App\Domains\Billing\Application\Mails;
 
-use App\Domains\User\Application\Queries\FindEmailsByUserRoleAndStatus\FindEmailsByUserRoleAndStatusQuery;
-use App\Domains\User\Domain\Enums\UserRole;
-use App\Domains\User\Domain\Enums\UserStatus;
+use App\Domains\Billing\Application\Classes\MonthlyData;
 use App\Domains\User\Domain\Models\User;
-use App\Interfaces\Query\QueryBus;
-use Exception;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CreateUserMail extends Mailable
+class BillingMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -24,7 +20,15 @@ class CreateUserMail extends Mailable
      */
     public User $user;
 
-    protected QueryBus $bus;
+    /**
+     * @var array
+     */
+    public array $expenses;
+
+    /**
+     * @var MonthlyData
+     */
+    public MonthlyData $billing;
 
     /**
      * @param $details
@@ -32,9 +36,9 @@ class CreateUserMail extends Mailable
     public function __construct(public $details)
     {
         $this->user = $this->details['user'];
-        $this->bus = app(QueryBus::class);
+        $this->expenses = $this->details['expenses'];
+        $this->billing = $this->details['billing'];
     }
-
 
     /**
      * Get the message envelope.
@@ -44,32 +48,21 @@ class CreateUserMail extends Mailable
         $env = env('PROPERTY_ADDRESS', false);
         $property_name = $env ? $env . ' - ' : '';
 
-        $admins = $this->bus->ask(
-            query: new FindEmailsByUserRoleAndStatusQuery(
-                status: UserStatus::ACTIVE,
-                role: [UserRole::ADMIN]
-            )
-        );
-
-        if(empty($admins)) {
-            throw new Exception('No admins to send email to.');
-        }
-
         return new Envelope(
             from: new Address(
                 address: env('MAIL_FROM_ADDRESS'),
                 name: env('MAIL_FROM_NAME')
             ),
-            to: $admins,
+            to: $this->user->email,
             replyTo: env('MAIL_REPLAYTO_ADDRESS'),
-            subject: $property_name . __('A new user has been registered'),
+            subject: $property_name . __('billing for') . ' ' . Carbon::now()->locale('pl')->isoFormat('MMMM') . ' ' . Carbon::now()->year,
         );
     }
 
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, Attachment>
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
      */
     public function attachments(): array
     {
@@ -77,12 +70,12 @@ class CreateUserMail extends Mailable
     }
 
     /**
-     * @return CreateUserMail
+     * @return BillingMail
      */
-    public function build(): CreateUserMail
+    public function build(): BillingMail
     {
         return $this
-            ->view('email.user.created.html')
-            ->text('email.user.created.text');
+            ->view('email.billing.monthly.html')
+            ->text('email.billing.monthly.text');
     }
 }

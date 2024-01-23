@@ -8,13 +8,14 @@ use App\Domains\User\Application\Commands\AddMoneyByUserId\AddMoneyByUserIdComma
 use App\Domains\User\Domain\Models\User;
 use App\Interfaces\Command\CommandBus;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PaymentRepositoryTest extends TestCase
 {
     use DatabaseTransactions;
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetLatestByAccountUuid()
     {
         $user = User::factory()->create();
@@ -43,9 +44,10 @@ class PaymentRepositoryTest extends TestCase
         $this->assertEquals($user->account->uuid, $payment['accountUuid']);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetLatest()
     {
+        //todo: modify test on mock
         $users = User::factory(3)->create();
 
         foreach ($users as $user) {
@@ -78,7 +80,7 @@ class PaymentRepositoryTest extends TestCase
         }
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testUpdateProjection()
     {
         $user = User::factory()->create();
@@ -101,7 +103,7 @@ class PaymentRepositoryTest extends TestCase
         $this->assertEquals('new_projection', $updatedPayment->projection);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testSave()
     {
         $user = User::factory()->create();
