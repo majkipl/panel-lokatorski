@@ -4,48 +4,46 @@ namespace Tests\Domains\User\Application\Queries\FindAccountsUuidByUserRoleAndSt
 
 use App\Domains\User\Application\Queries\FindAccountsUuidByUserRoleAndStatus\FindAccountsUuidByUserRoleAndStatusHandler;
 use App\Domains\User\Application\Queries\FindAccountsUuidByUserRoleAndStatus\FindAccountsUuidByUserRoleAndStatusQuery;
+use App\Domains\User\Domain\Enums\UserRole;
+use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Repositories\AccountRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindAccountsUuidByUserRoleAndStatusHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock AccountRepositoryInterface
+        // Arrange
         $accountRepositoryMock = $this->createMock(AccountRepositoryInterface::class);
 
-        $status = 'active';
-        $roles = ['admin', 'user'];
-        $expectedUuids = ['uuid1', 'uuid2', 'uuid3'];
+        $status = UserStatus::ACTIVE->value;
+        $roles = [UserRole::ADMIN->value, UserRole::USER->value];
+        $expectedUuids = [fake()->uuid(), fake()->uuid(), fake()->uuid()];
 
-        // Set up expectation for getAccountByUserRoleAndStatus method in AccountRepositoryInterface
+        $collection = new Collection([]);
+        foreach($expectedUuids as $expectedUuid) {
+            $collection->add(['uuid' => $expectedUuid]);
+        }
+
         $accountRepositoryMock->expects($this->once())
             ->method('getAccountByUserRoleAndStatus')
             ->with(
-                $this->equalTo($status), // Status
-                $this->equalTo($roles) // Role
+                $this->equalTo($status),
+                $this->equalTo($roles),
             )
-            ->willReturn(new Collection([
-                ['uuid' => 'uuid1'],
-                ['uuid' => 'uuid2'],
-                ['uuid' => 'uuid3'],
-            ]));
+            ->willReturn($collection);
 
-        // Create FindAccountsUuidByUserRoleAndStatusHandler instance with mocked AccountRepositoryInterface
         $handler = new FindAccountsUuidByUserRoleAndStatusHandler($accountRepositoryMock);
 
-        // Create FindAccountsUuidByUserRoleAndStatusQuery instance
         $query = new FindAccountsUuidByUserRoleAndStatusQuery($status, $roles);
 
-        // Call handle method
+        // Act
         $uuids = $handler->handle($query);
 
-        // Check if returned uuids match the expected uuids
+        // Assert
         $this->assertEquals($expectedUuids, $uuids);
     }
 }

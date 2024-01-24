@@ -27,4 +27,22 @@ interface AccountRepositoryInterface
      */
     public function getAccountByUserRoleAndStatus(string $status, array $role): Collection;
 
+    /**
+     * @param int $id
+     * @return bool
+     */
+    public function isExistAccountByUserId(int $id): bool;
+
+    /**
+     * @param array $attributes
+     * @return bool
+     */
+    public function save(array $attributes = []): bool;
+
+    /**
+     * @param int $id
+     * @param float $balance
+     * @return bool
+     */
+    public function updateBalanceByUserId(int $id, float $balance): bool;
 }

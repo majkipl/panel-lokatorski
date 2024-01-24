@@ -2,224 +2,191 @@
 
 namespace Tests\Domains\Expense\Application\Projectors;
 
+use App\Domains\Expense\Application\Commands\Save\SaveCommand;
+use App\Domains\Expense\Application\Commands\UpdateProjection\UpdateProjectionCommand;
 use App\Domains\Expense\Application\Projectors\ExpenseProjector;
 use App\Domains\Expense\Application\Queries\FindAllByAccountUuid\FindAllByAccountUuidQuery;
 use App\Domains\Expense\Domain\Events\ExpenseAdded;
 use App\Domains\Expense\Domain\Events\ExpenseCanceled;
-use App\Domains\User\Application\Projectors\AccountBalanceProjector;
-use App\Domains\User\Domain\Enums\UserRole;
-use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Events\AccountCreated;
-use App\Domains\User\Domain\Models\User;
 use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ExpenseProjectorTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->commandBus = app(CommandBus::class);
-        $this->queryBus = app(QueryBus::class);
-
-        // Create PaymentProjector instance with mocked command bus and query bus
-        $this->projector = new ExpenseProjector($this->commandBus, $this->queryBus);
-    }
-
-    #[Test]
     public function testOnAccountCreated()
     {
-        // Turn off observer
-        User::unsetEventDispatcher();
-
-        // Get instance model
-        $user = User::factory()->create();
-
-        // Turn on observer
-        User::setEventDispatcher(new Dispatcher());
-
         // Arrange
-        $projector = new AccountBalanceProjector();
-        $event = new AccountCreated(['user_id' => $user->id]);
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        Event::fake();
+        $accountAttributes = ['uuid' => fake()->uuid()];
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
+        $event = new AccountCreated($accountAttributes);
+        $event->setMetaData($metaData);
+
+        // Act
+        event($event);
+
+        // Assert
+        Event::assertDispatched(AccountCreated::class, function ($event) use ($accountAttributes) {
+            return $event->accountAttributes['uuid'] === $accountAttributes['uuid'];
+        });
+        $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(SaveCommand::class));
         $projector->onAccountCreated($event);
-
-        $this->projector->onAccountCreated(new AccountCreated([
-            'uuid' => $user->refresh()->account->uuid,
-        ]));
-
-        $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
-
     }
 
     #[Test]
     public function testOnExpenseAdded()
     {
-        // Get instance model
-        $user = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-
-        $part1 = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-        $part2 = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        Event::fake();
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString(), 'stored-event-id' => fake()->randomNumber()];
+        $eventAccountUuid = fake()->uuid();
+        $eventName = fake()->word();
+        $eventAmount = fake()->randomFloat(2);
+        $eventParticipants = [fake()->uuid(), fake()->uuid()];
         $event = new ExpenseAdded(
-            accountUuid: $user->account->uuid,
-            name: 'name',
-            amount: 100,
-            participants: [
-                $part1->account->uuid,
-                $part2->account->uuid,
-            ]
+            accountUuid: $eventAccountUuid,
+            name: $eventName,
+            amount: $eventAmount,
+            participants: $eventParticipants
         );
+        $event->setMetaData($metaData);
 
+        // Act
         event($event);
+        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize([]));
+        $commandBus->expects($this->atLeastOnce())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
+        $projector->onExpenseAdded($event);
 
-        $this->projector->onExpenseAdded(
-            event: $event
-        );
-
-        $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
+        // Assert
+        Event::assertDispatched(ExpenseAdded::class, function ($event) use ($eventAccountUuid, $eventName, $eventAmount) {
+            return $event->accountUuid === $eventAccountUuid && $event->name === $eventName && $event->amount === $eventAmount;
+        });
     }
 
     #[Test]
     public function testOnExpenseCanceled()
     {
-        // Get instance model
-        $user = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-
-        $part1 = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-        $part2 = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-
-
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        Event::fake();
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
+        $eventAccountUuid = fake()->uuid();
+        $eventName = fake()->word();
+        $eventAmount = fake()->randomFloat(2);
+        $eventParticipants = [fake()->uuid(), fake()->uuid()];
+        $eventId = fake()->randomNumber();
         $event = new ExpenseCanceled(
-            accountUuid: $user->account->uuid,
-            name: 'name',
-            amount: 100,
-            eventId: 1,
-            participants: [
-                $part1->account->uuid,
-                $part2->account->uuid,
-            ]
+            accountUuid: $eventAccountUuid,
+            name: $eventName,
+            amount: $eventAmount,
+            eventId: $eventId,
+            participants: $eventParticipants
         );
-
+        $event->setMetaData($metaData);
         event($event);
 
-        $this->projector->onExpenseCanceled(
-            event: $event
-        );
+        // Act
+        $queryBus->expects($this->atLeastOnce())->method('ask')->willReturn(serialize([]));
+        $commandBus->expects($this->atLeastOnce())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
+        $projector->onExpenseCanceled($event);
 
-        $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
+        // Assert
+        Event::assertDispatched(ExpenseCanceled::class, function ($event) use ($eventAccountUuid, $eventName, $eventAmount) {
+            return $event->accountUuid === $eventAccountUuid && $event->name === $eventName && $event->amount === $eventAmount;
+        });
     }
 
     #[Test]
     public function testGetAll()
     {
-        // Get instance model
-        $users = User::factory(3)->create();
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        $uuid = fake()->uuid();
 
-        foreach ($users as $user) {
-            $event = new ExpenseAdded(
-                accountUuid: $user->account->uuid,
-                name: 'name',
-                amount: 100,
-                participants: [
-                    $users[0]->account->uuid,
-                    $users[1]->account->uuid,
-                    $users[2]->account->uuid,
-                ]
-            );
+        // Act
+        $queryBus->expects($this->once())
+            ->method('ask')
+            ->with($this->isInstanceOf(FindAllByAccountUuidQuery::class))
+            ->willReturn([]);
+        $result = $projector->getAll($uuid);
 
-            event($event);
-
-            $this->projector->onExpenseAdded(
-                event: $event
-            );
-        }
-
-        foreach ($users as $user) {
-            $expense = $user->refresh()->account->expenses()->latest()->first();
-            $this->assertEquals($expense->account_uuid, $user->account->uuid);
-            $this->assertDatabaseHas('expenses', ['account_uuid' => $user->refresh()->account->uuid]);
-        }
+        // Assert
+        $this->assertIsArray($result);
     }
 
     #[Test]
     public function testGetExpensesForNow()
     {
-        $user = User::factory()->create();
-        $count_expenses = fake()->numberBetween(3,5);
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        $uuid = fake()->uuid();
+        $expenses = [
+            ['created_year' => Carbon::now()->year, 'created_month' => Carbon::now()->locale('pl')->isoFormat('MMMM')],
+            ['created_year' => Carbon::now()->subYear()->year, 'created_month' => Carbon::now()->subYear()->locale('pl')->isoFormat('MMMM')],
+        ];
+        $queryBus->expects($this->once())
+            ->method('ask')
+            ->with($this->isInstanceOf(FindAllByAccountUuidQuery::class))
+            ->willReturn($expenses);
 
-        for ($i= 0; $i < $count_expenses; $i++) {
-            $event = new ExpenseAdded(
-                accountUuid: $user->account->uuid,
-                name: 'name',
-                amount: 100,
-                participants: [
-                    $user->account->uuid
-                ]
-            );
+        // Act
+        $result = $projector->getExpensesForNow($uuid);
 
-            event($event);
-
-            $this->projector->onExpenseAdded(
-                event: $event
-            );
+        // Assert
+        $this->assertIsArray($result);
+        foreach ($result as $expense) {
+            $this->assertEquals(Carbon::now()->year, $expense['created_year']);
+            $this->assertEquals(Carbon::now()->locale('pl')->isoFormat('MMMM'), $expense['created_month']);
         }
-
-        $data = $this->projector->getExpensesForNow($user->account->uuid);
-
-        $this->assertEquals($count_expenses, count($data)/2);
     }
 
     #[Test]
     public function testGetTodaysExpenses()
     {
-        $user = User::factory()->create();
-        $count_expenses = fake()->numberBetween(3,5);
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new ExpenseProjector($commandBus, $queryBus);
+        $uuid = fake()->uuid();
+        $expenses = [
+            [
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'created_at' => Carbon::now()->subDay(),
+            ],
+        ];
 
-        for ($i= 0; $i < $count_expenses; $i++) {
-            $event = new ExpenseAdded(
-                accountUuid: $user->account->uuid,
-                name: 'name',
-                amount: 100,
-                participants: [
-                    $user->account->uuid
-                ]
-            );
+        // Act
+        $queryBus->expects($this->once())
+            ->method('ask')
+            ->with($this->isInstanceOf(FindAllByAccountUuidQuery::class))
+            ->willReturn($expenses);
+        $result = $projector->getTodaysExpenses($uuid);
 
-            event($event);
-
-            $this->projector->onExpenseAdded(
-                event: $event
-            );
+        // Assert
+        $this->assertIsArray($result);
+        foreach ($result as $expense) {
+            $this->assertEquals(Carbon::now()->year, $expense['created_at']->year);
+            $this->assertEquals(Carbon::now()->month, $expense['created_at']->month);
+            $this->assertEquals(Carbon::now()->day, $expense['created_at']->day);
         }
-
-        $data = $this->projector->getTodaysExpenses($user->account->uuid);
-
-        $this->assertEquals($count_expenses, count($data)/2);
     }
-
 }

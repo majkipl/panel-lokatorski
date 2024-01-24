@@ -2,62 +2,48 @@
 
 namespace App\Domains\User\Application\Projectors;
 
-use App\Domains\Payment\Domain\Events\MoneyAdded;
-use App\Domains\Payment\Domain\Events\MoneySubtracted;
+use App\Domains\User\Application\Commands\SaveAccount\SaveAccountCommand;
+use App\Domains\User\Application\Commands\UpdateBalanceByUserId\UpdateBalanceByUserIdCommand;
+use App\Domains\User\Application\Queries\IsThereAccountByUserId\IsThereAccountByUserIdQuery;
 use App\Domains\User\Domain\Events\AccountCreated;
-use App\Domains\User\Domain\Events\AccountDeleted;
-use App\Domains\User\Domain\Models\Account;
+use App\Interfaces\Command\CommandBus;
+use App\Interfaces\Query\QueryBus;
 use Spatie\EventSourcing\EventHandlers\Projectors\Projector;
 
 class AccountBalanceProjector extends Projector
 {
+    /**
+     * @param CommandBus $commandBus
+     * @param QueryBus $queryBus
+     */
+    public function __construct(protected CommandBus $commandBus, protected QueryBus $queryBus)
+    {
+    }
+
     /**
      * @param AccountCreated $event
      * @return void
      */
     public function onAccountCreated(AccountCreated $event): void
     {
-        if (!Account::where('user_id', $event->accountAttributes['user_id'])->exists()) {
-            (new Account($event->accountAttributes))->writeable()->save();
+        $isExist = $this->queryBus->ask(
+            query: new IsThereAccountByUserIdQuery(
+                id: $event->accountAttributes['user_id']
+            )
+        );
+        if (!$isExist) {
+            $this->commandBus->dispatch(
+                command: new SaveAccountCommand(
+                    attributes: $event->accountAttributes
+                )
+            );
         } else {
-            $account = Account::where('user_id', $event->accountAttributes['user_id'])->first();
-            $account->balance = 0;
-            $account->writeable()->save();
+            $this->commandBus->dispatch(
+                command: new UpdateBalanceByUserIdCommand(
+                    id: $event->accountAttributes['user_id'],
+                    balance: 0
+                )
+            );
         }
-    }
-
-    /**
-     * @param MoneyAdded $event
-     * @return void
-     */
-    public function onMoneyAdded(MoneyAdded $event)
-    {
-        $account = Account::uuid($event->accountUuid);
-
-        $account->balance += $event->amount;
-
-        $account->writeable()->save();
-    }
-
-    /**
-     * @param MoneySubtracted $event
-     * @return void
-     */
-    public function onMoneySubtracted(MoneySubtracted $event): void
-    {
-        $account = Account::uuid($event->accountUuid);
-
-        $account->balance -= $event->amount;
-
-        $account->writeable()->save();
-    }
-
-    /**
-     * @param AccountDeleted $event
-     * @return void
-     */
-    public function onAccountDeleted(AccountDeleted $event): void
-    {
-        Account::uuid($event->accountUuid)->writeable()->delete();
     }
 }

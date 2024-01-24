@@ -5,23 +5,18 @@ namespace Tests\Domains\User\Application\Commands\CancelExpenseByAccountUuid;
 use App\Domains\User\Application\Commands\CancelExpenseByAccountUuid\CancelExpenseByAccountUuidCommand;
 use App\Domains\User\Application\Commands\CancelExpenseByAccountUuid\CancelExpenseByAccountUuidHandler;
 use App\Domains\User\Domain\Repositories\AccountRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CancelExpenseByAccountUuidHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock AccountRepositoryInterface
-        $accountRepositoryMock = $this->createMock(AccountRepositoryInterface::class);
-
+        // Arrange
         $uuid = fake()->uuid();
         $id = fake()->randomNumber();
-
-        // Set up expectation for cancelExpense method in AccountRepositoryInterface
+        $accountRepositoryMock = $this->createMock(AccountRepositoryInterface::class);
         $accountRepositoryMock->expects($this->once())
             ->method('cancelExpense')
             ->with(
@@ -29,13 +24,13 @@ class CancelExpenseByAccountUuidHandlerTest extends TestCase
                 $this->equalTo($id) // ID
             );
 
-        // Create CancelExpenseByAccountUuidHandler instance with mocked AccountRepositoryInterface
+        // Act
         $handler = new CancelExpenseByAccountUuidHandler($accountRepositoryMock);
-
-        // Create CancelExpenseByAccountUuidCommand instance
         $command = new CancelExpenseByAccountUuidCommand($uuid, $id);
 
-        // Call handle method
         $handler->handle($command);
+
+        // Assert
+        // No direct assertions needed; the expectation on the mock suffices.
     }
 }

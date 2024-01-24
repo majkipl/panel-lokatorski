@@ -2,92 +2,40 @@
 
 namespace Tests\Domains\User\Application\Projectors;
 
-use App\Domains\Payment\Domain\Events\MoneyAdded;
-use App\Domains\Payment\Domain\Events\MoneySubtracted;
+use App\Domains\User\Application\Commands\SaveAccount\SaveAccountCommand;
 use App\Domains\User\Application\Projectors\AccountBalanceProjector;
 use App\Domains\User\Domain\Events\AccountCreated;
-use App\Domains\User\Domain\Models\User;
-use Illuminate\Events\Dispatcher;
+use App\Interfaces\Command\CommandBus;
+use App\Interfaces\Query\QueryBus;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AccountBalanceProjectorTest extends TestCase
 {
     use DatabaseTransactions;
 
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function it_handles_account_created_event_and_creates_new_account()
+    #[Test]
+    public function testOnAccountCreated()
     {
-        // Turn off observer
-        User::unsetEventDispatcher();
-
-        // Get instance model
-        $user = User::factory()->create();
-
-        // Turn on observer
-        User::setEventDispatcher(new Dispatcher());
-
         // Arrange
-        $projector = new AccountBalanceProjector();
-        $event = new AccountCreated(['user_id' => $user->id]);
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+        $projector = new AccountBalanceProjector($commandBus, $queryBus);
+        Event::fake();
+        $accountAttributes = ['user_id' => fake()->randomNumber()];
+        $event = new AccountCreated($accountAttributes);
 
         // Act
+        event($event);
+
+        // Assert
+        Event::assertDispatched(AccountCreated::class, function ($event) use ($accountAttributes) {
+            return $event->accountAttributes['user_id'] === $accountAttributes['user_id'];
+        });
+        $queryBus->expects($this->once())->method('ask')->willReturn(false);
+        $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(SaveAccountCommand::class));
         $projector->onAccountCreated($event);
-
-        // Assert
-        $this->assertDatabaseHas('accounts', ['user_id' => $user->id]);
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function it_handles_account_created_event_and_updates_existing_account_balance_to_zero()
-    {
-        // Get instance model
-        $user = User::factory()->create();
-
-        // Arrange
-        $existingAccount = $user->account;
-        $projector = new AccountBalanceProjector();
-        $event = new AccountCreated(['user_id' => $user->id]);
-
-        // Act
-        $projector->onAccountCreated($event);
-
-        // Assert
-        $this->assertEquals(0, $existingAccount->refresh()->balance);
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function it_handles_money_added_event_and_updates_account_balance()
-    {
-        // Get instance model
-        $user = User::factory()->create();
-
-        // Arrange
-        $amount = 100;
-        $projector = new AccountBalanceProjector();
-        $event = new MoneyAdded($user->account->uuid, $amount);
-
-        // Act
-        $projector->onMoneyAdded($event);
-
-        // Assert
-        $this->assertEquals($amount, $user->account->refresh()->balance);
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function it_handles_money_subtracted_event_and_updates_account_balance()
-    {
-        // Arrange
-        $user = User::factory()->create();
-        $balance = $user->account->balanse;
-        $amount = 100;
-        $projector = new AccountBalanceProjector();
-        $event = new MoneySubtracted($user->account->uuid, $amount);
-
-        // Act
-        $projector->onMoneySubtracted($event);
-
-        // Assert
-        $this->assertEquals($balance - $amount, $user->account->refresh()->balance);
     }
 }

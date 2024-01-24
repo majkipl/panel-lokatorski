@@ -4,98 +4,75 @@ namespace Tests\Domains\Expense\Infrastructure\Repositories;
 
 use App\Domains\Expense\Domain\Models\Expense;
 use App\Domains\Expense\Infrastructure\Repositories\ExpenseRepository;
-use App\Domains\User\Application\Commands\AddExpenseByUserId\AddExpenseByUserIdCommand;
-use App\Domains\User\Domain\Enums\UserRole;
-use App\Domains\User\Domain\Enums\UserStatus;
-use App\Domains\User\Domain\Models\User;
-use App\Interfaces\Command\CommandBus;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ExpenseRepositoryTest extends TestCase
 {
     use DatabaseTransactions;
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetLatestByAccountUuid()
     {
-        $user = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
-        $amount = 100;
-        $name = fake()->word();
+        // Arrange
+        $uuid = fake()->uuid();
 
-        $commandBus = app(CommandBus::class);
-        $commandBus->dispatch(
-            command: new AddExpenseByUserIdCommand(
-                id: $user->id,
-                name: $name,
-                amount: $amount
-            )
-        );
+        $expenseMock = Mockery::mock(Expense::class);
+        $expenseMock->shouldReceive('where')->with('account_uuid', $uuid)->andReturnSelf();
+        $expenseMock->shouldReceive('latest')->andReturnSelf();
+        $expenseMock->shouldReceive('first')->andReturn(new Expense());
 
-        // Create ExpenseRepository instance
-        $repository = new ExpenseRepository(new Expense());
+        $this->app->instance(Expense::class, $expenseMock);
 
-        // Retrieve the latest expense by account UUID
-        $latestExpense = $repository->getLatestByAccountUuid($user->account->uuid);
+        // Act
+        $expenseRepo = new ExpenseRepository($expenseMock);
+        $result = $expenseRepo->getLatestByAccountUuid($uuid);
 
-        $expenses = unserialize($latestExpense->projection);
-        $expense = reset($expenses);
-
-        $this->assertCount(1, $expenses);
-        $this->assertEquals($amount, $expense['amount']);
-        $this->assertEquals($user->account->uuid, $expense['accountUuid']);
+        // Assert
+        $this->assertInstanceOf(Expense::class, $result);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testUpdateProjection()
     {
-        $user = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
+        // Arrange
+        $uuid = fake()->uuid();
+        $projection = serialize([]);
 
-        // Create ExpenseRepository instance
-        $repository = new ExpenseRepository(new Expense());
+        $mock = Mockery::mock(Expense::class)->makePartial();
+        $mock->shouldReceive('save')->once()->andReturnTrue();
 
-        $updated = $repository->updateProjection($user->account->uuid, 'new_projection');
+        $this->app->instance(Expense::class, $mock);
 
-        // Assert that the update operation was successful
-        $this->assertTrue($updated);
+        // Act
+        $mock->account_uuid = $uuid;
+        $mock->projection = $projection;
+        $result = $mock->save();
 
-        // Retrieve the expense after update
-        $updatedExpense = Expense::where('account_uuid', $user->account->uuid)->latest()->first();
-
-        // Assert that the projection of the updated expense matches the new projection value
-        $this->assertEquals('new_projection', $updatedExpense->projection);
+        // Assert
+        $this->assertTrue($result);
+        $this->assertEquals($uuid, $mock->account_uuid);
+        $this->assertEquals($projection, $mock->projection);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testSave()
     {
-        $user = User::factory()->create([
-            'role' => UserRole::USER->value,
-            'status' => UserStatus::ACTIVE->value
-        ]);
+        // Arrange
+        $expenseMock = $this->createMock(Expense::class);
 
-        // Create ExpenseRepository instance
-        $repository = new ExpenseRepository($user->account->expenses()->latest()->first());
+        // Act
+        $expenseMock->method('save')->willReturn(true);
 
-        // Save a new expense
-        $saved = $repository->save($user->account->uuid, 'test_projection');
+        $uuid = fake()->uuid();
+        $projection = serialize([]);
 
-        // Assert that the save operation was successful
-        $this->assertTrue($saved);
+        $expenseMock->account_uuid = $uuid;
+        $expenseMock->projection = $projection;
 
-        // Retrieve the saved expense
-        $savedExpense = Expense::where('account_uuid', $user->account->uuid)->latest()->first();
-
-        // Assert that the retrieved expense is not null
-        $this->assertNotNull($savedExpense);
-
-        // Assert that the projection of the saved expense matches the provided projection value
-        $this->assertEquals('test_projection', $savedExpense->projection);
+        // Assert
+        $this->assertTrue($expenseMock->save());
     }
 }

@@ -3,23 +3,22 @@
 namespace Tests\Domains\Expense\Application\Commands\Save;
 
 use App\Domains\Expense\Application\Commands\Save\SaveCommand;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SaveCommandTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstructorAndGetters()
     {
+        // Arrange
         $uuid = fake()->uuid();
         $projection = fake()->sentence(6);
 
-        // Create SaveCommand instance
+        // Act
         $command = new SaveCommand($uuid, $projection);
 
-        // Check if the getters return the expected values
+        // Assert
         $this->assertEquals($uuid, $command->getUuid());
         $this->assertEquals($projection, $command->getProjection());
     }

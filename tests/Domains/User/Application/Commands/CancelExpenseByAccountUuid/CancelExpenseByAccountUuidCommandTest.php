@@ -3,21 +3,22 @@
 namespace Tests\Domains\User\Application\Commands\CancelExpenseByAccountUuid;
 
 use App\Domains\User\Application\Commands\CancelExpenseByAccountUuid\CancelExpenseByAccountUuidCommand;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CancelExpenseByAccountUuidCommandTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstruction()
     {
+        // Arrange
         $uuid = fake()->uuid();
         $id = fake()->randomNumber();
 
+        // Act
         $command = new CancelExpenseByAccountUuidCommand($uuid, $id);
 
+        // Assert
         $this->assertEquals($uuid, $command->getUuid());
         $this->assertEquals($id, $command->getId());
     }

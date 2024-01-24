@@ -6,37 +6,30 @@ use App\Domains\Payment\Application\Queries\FindLatestPaymentByAccountUuid\FindL
 use App\Domains\Payment\Application\Queries\FindLatestPaymentByAccountUuid\FindLatestPaymentByAccountUuidQuery;
 use App\Domains\Payment\Domain\Models\Payment;
 use App\Domains\Payment\Domain\Repositories\PaymentRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindLatestPaymentByAccountUuidHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
+        // Arrange
         $uuid = fake()->uuid();
         $projection = fake()->sentence();
 
-        // Mock PaymentRepositoryInterface
         $repositoryMock = $this->createMock(PaymentRepositoryInterface::class);
-
-        // Set up expectations
         $repositoryMock->expects($this->once())
             ->method('getLatestByAccountUuid')
             ->with(
-                $this->equalTo($uuid)  // Example UUID
+                $this->equalTo($uuid)
             )
-            ->willReturn(new Payment(['projection' => $projection])); // Example return value
+            ->willReturn(new Payment(['projection' => $projection]));
 
-        // Create FindLatestPaymentByAccountUuidHandler instance with mocked repository
         $handler = new FindLatestPaymentByAccountUuidHandler($repositoryMock);
-
-        // Create example query
         $query = new FindLatestPaymentByAccountUuidQuery($uuid);
 
-        // Call handle method and assert the return value
+        // Act & Assert
         $this->assertEquals($projection, $handler->handle($query));
     }
 }

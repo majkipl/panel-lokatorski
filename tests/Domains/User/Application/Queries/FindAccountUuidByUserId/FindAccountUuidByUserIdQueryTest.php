@@ -3,22 +3,21 @@
 namespace Tests\Domains\User\Application\Queries\FindAccountUuidByUserId;
 
 use App\Domains\User\Application\Queries\FindAccountUuidByUserId\FindAccountUuidByUserIdQuery;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindAccountUuidByUserIdQueryTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstructor()
     {
+        // Arrange
         $userId = fake()->randomNumber();
 
-        // Create FindAccountUuidByUserIdQuery instance
+        // Act
         $query = new FindAccountUuidByUserIdQuery($userId);
 
-        // Check if ID is set correctly
+        // Assert
         $this->assertEquals($userId, $query->getId());
     }
 }

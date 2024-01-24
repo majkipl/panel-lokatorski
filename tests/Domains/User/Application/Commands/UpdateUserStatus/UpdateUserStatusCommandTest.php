@@ -4,21 +4,22 @@ namespace Tests\Domains\User\Application\Commands\UpdateUserStatus;
 
 use App\Domains\User\Application\Commands\UpdateUserStatus\UpdateUserStatusCommand;
 use App\Domains\User\Domain\Enums\UserStatus;
-use App\Domains\User\Domain\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class UpdateUserStatusCommandTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstruction()
     {
-        $id = User::factory()->create()->id;
+        // Arrange
+        $id = fake()->randomNumber();
         $status = UserStatus::ACTIVE->value;
+
+        // Act
         $command = new UpdateUserStatusCommand($id, $status);
 
+        // Assert
         $this->assertInstanceOf(UpdateUserStatusCommand::class, $command);
         $this->assertEquals($id, $command->getId());
         $this->assertEquals($status, $command->getStatus());

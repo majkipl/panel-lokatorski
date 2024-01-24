@@ -6,17 +6,16 @@ use App\Domains\User\Application\Commands\CreateUser\CreateUserCommand;
 use App\Domains\User\Application\DTO\UserDTO;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class CreateUserCommandTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstruction()
     {
+        // Arrange
         $email = fake()->safeEmail();
         $firstname = fake()->firstName();
         $lastname = fake()->lastName();
@@ -43,8 +42,10 @@ class CreateUserCommandTest extends TestCase
             last_login_at: $last_login_at
         );
 
+        // Act
         $command = new CreateUserCommand($userDTO);
 
+        // Assert
         $this->assertInstanceOf(CreateUserCommand::class, $command);
         $this->assertInstanceOf(UserDTO::class, $command->getDto());
         $this->assertEquals($email, $command->getDto()->email);

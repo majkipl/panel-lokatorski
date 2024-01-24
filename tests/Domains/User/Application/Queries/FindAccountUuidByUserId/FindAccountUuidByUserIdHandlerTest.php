@@ -6,38 +6,33 @@ use App\Domains\User\Application\Queries\FindAccountUuidByUserId\FindAccountUuid
 use App\Domains\User\Application\Queries\FindAccountUuidByUserId\FindAccountUuidByUserIdQuery;
 use App\Domains\User\Domain\Models\Account;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindAccountUuidByUserIdHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
+        // Arrange
         $userId= fake()->randomNumber();
         $accountUuid = fake()->uuid();
 
-        // Create UserRepositoryInterface mock
         $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
 
-        // Set up expectation for getAccountByUserId method in UserRepositoryInterface
         $userRepositoryMock->expects($this->once())
             ->method('getAccountByUserId')
             ->with($userId)
             ->willReturn(new Account(['uuid' => $accountUuid]));
 
-        // Create FindAccountUuidByUserIdHandler instance with mocked UserRepositoryInterface
         $handler = new FindAccountUuidByUserIdHandler($userRepositoryMock);
 
-        // Create FindAccountUuidByUserIdQuery instance
         $query = new FindAccountUuidByUserIdQuery($userId);
 
-        // Call handle method
+        // Act
         $result = $handler->handle($query);
 
-        // Check if the result matches the expected account UUID
+        // Assert
         $this->assertEquals($accountUuid, $result);
     }
 }

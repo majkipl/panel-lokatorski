@@ -11,18 +11,14 @@ use Tests\TestCase;
 
 class UpdateProjectionHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
     #[Test]
     public function testHandle()
     {
+        // Arrange
         $uuid = fake()->uuid();
         $projection = fake()->word();
 
-        // Mock BalanceRepositoryInterface
         $repositoryMock = $this->createMock(BalanceRepositoryInterface::class);
-
-        // Set up the expected method calls
         $repositoryMock->expects($this->once())
             ->method('updateProjection')
             ->with(
@@ -31,14 +27,13 @@ class UpdateProjectionHandlerTest extends TestCase
             )
             ->willReturn(true);
 
-        // Create a new UpdateProjectionHandler instance with the mocked repository
         $handler = new UpdateProjectionHandler($repositoryMock);
-
-        // Create a new UpdateProjectionCommand instance
         $command = new UpdateProjectionCommand($uuid, $projection);
 
-        // Call the handle method and assert the result
+        // Act
         $result = $handler->handle($command);
+
+        // Assert
         $this->assertTrue($result);
     }
 }

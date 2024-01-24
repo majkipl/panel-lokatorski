@@ -14,13 +14,13 @@ class FindLatestExpenseByAccountUuidQueryTest extends TestCase
     #[Test]
     public function testConstruct()
     {
-        // UUID example
+        // Arrange
         $uuid = fake()->uuid();
 
-        // Create FindLatestExpenseByAccountUuidQuery instance
+        // Act
         $query = new FindLatestExpenseByAccountUuidQuery($uuid);
 
-        // Assert that the query UUID is set correctly
+        // Assert
         $this->assertEquals($uuid, $query->getUuid());
     }
 }

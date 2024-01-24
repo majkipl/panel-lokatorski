@@ -2,121 +2,143 @@
 
 namespace Tests\Domains\Payment\Application\Projectors;
 
+use App\Domains\Payment\Application\Commands\Save\SaveCommand;
+use App\Domains\Payment\Application\Commands\UpdateProjection\UpdateProjectionCommand;
 use App\Domains\Payment\Application\Projectors\PaymentProjector;
+use App\Domains\Payment\Application\Queries\FindLatestPayments\FindAllLatestPaymentsQuery;
 use App\Domains\Payment\Domain\Events\MoneyAdded;
 use App\Domains\Payment\Domain\Events\MoneySubtracted;
-use App\Domains\User\Application\Projectors\AccountBalanceProjector;
 use App\Domains\User\Domain\Events\AccountCreated;
 use App\Domains\User\Domain\Models\User;
 use App\Interfaces\Command\CommandBus;
 use App\Interfaces\Query\QueryBus;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PaymentProjectorTest extends TestCase
 {
-    use DatabaseTransactions;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->commandBus = app(CommandBus::class);
-        $this->queryBus = app(QueryBus::class);
-
-        // Create PaymentProjector instance with mocked command bus and query bus
-        $this->projector = new PaymentProjector($this->commandBus, $this->queryBus);
-    }
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnAccountCreated()
     {
-        // Turn off observer
-        User::unsetEventDispatcher();
-
-        // Get instance model
-        $user = User::factory()->create();
-
-        // Turn on observer
-        User::setEventDispatcher(new Dispatcher());
-
         // Arrange
-        $projector = new AccountBalanceProjector();
-        $event = new AccountCreated(['user_id' => $user->id]);
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+
+        $projector = new PaymentProjector($commandBus, $queryBus);
+
+        Event::fake();
+
+        $accountAttributes = ['uuid' => fake()->uuid()];
+        $event = new AccountCreated($accountAttributes);
+
+        // Act
+        event($event);
+
+        // Assert
+        Event::assertDispatched(AccountCreated::class, function ($event) use ($accountAttributes) {
+            return $event->accountAttributes['uuid'] === $accountAttributes['uuid'];
+        });
+
+        $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(SaveCommand::class));
+
         $projector->onAccountCreated($event);
-
-        $this->projector->onAccountCreated(new AccountCreated([
-            'uuid' => $user->refresh()->account->uuid,
-        ]));
-
-        $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnMoneyAdded()
     {
-        // Get instance model
-        $user = User::factory()->create();
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+
+        $projector = new PaymentProjector($commandBus, $queryBus);
+
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
+
+        Event::fake();
+
+        $eventAccountUuid = fake()->uuid();
+        $eventAmount = fake()->randomFloat(2);
 
         $event = new MoneyAdded(
-            accountUuid: $user->account->uuid,
-            amount: 100
+            accountUuid: $eventAccountUuid,
+            amount: $eventAmount,
         );
 
+        $event->setMetaData($metaData);
+
+        // Act
         event($event);
 
-        $this->projector->onMoneyAdded(
-            event: $event
-        );
+        // Assert
+        Event::assertDispatched(MoneyAdded::class, function ($event) use ($eventAccountUuid, $eventAmount) {
+            return $event->accountUuid === $eventAccountUuid && $event->amount === $eventAmount;
+        });
 
-        $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
+        $queryBus->expects($this->exactly(2))->method('ask')->willReturnOnConsecutiveCalls(serialize([]), new User());
+        $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
 
+        $projector->onMoneyAdded($event);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testOnMoneySubtracted()
     {
-        // Get instance model
-        $user = User::factory()->create();
+        // Arrange
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
+
+        $projector = new PaymentProjector($commandBus, $queryBus);
+
+        $metaData = ['created-at' => Carbon::now()->toDateTimeString()];
+
+        Event::fake();
+
+        $eventAccountUuid = fake()->uuid();
+        $eventAmount = fake()->randomFloat(2);
 
         $event = new MoneySubtracted(
-            accountUuid: $user->account->uuid,
-            amount: 100
+            accountUuid: $eventAccountUuid,
+            amount: $eventAmount,
         );
 
+        $event->setMetaData($metaData);
+
+        // Act
         event($event);
 
-        $this->projector->onMoneySubtracted(
-            event: $event
-        );
+        // Assert
+        Event::assertDispatched(MoneySubtracted::class, function ($event) use ($eventAccountUuid, $eventAmount) {
+            return $event->accountUuid === $eventAccountUuid && $event->amount === $eventAmount;
+        });
 
-        $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
+        $queryBus->expects($this->exactly(2))->method('ask')->willReturnOnConsecutiveCalls(serialize([]), new User());
+        $commandBus->expects($this->once())->method('dispatch')->with($this->isInstanceOf(UpdateProjectionCommand::class));
+
+        $projector->onMoneySubtracted($event);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testGetAllOperations()
     {
-        // Get instance model
-        $users = User::factory(3)->create();
+        // Arrange
+        // Mock CommandBus and QueryBus
+        $commandBus = $this->createMock(CommandBus::class);
+        $queryBus = $this->createMock(QueryBus::class);
 
-        foreach ($users as $user) {
-            $event = new MoneySubtracted(
-                accountUuid: $user->account->uuid,
-                amount: 100
-            );
+        $projector = new PaymentProjector($commandBus, $queryBus);
 
-            event($event);
+        // Act
+        $queryBus->expects($this->once())
+            ->method('ask')
+            ->with($this->isInstanceOf(FindAllLatestPaymentsQuery::class))
+            ->willReturn([]);
 
-            $this->projector->onMoneySubtracted(
-                event: $event
-            );
-        }
+        $operations = $projector->getAllOperations();
 
-        foreach ($users as $user) {
-            $payment = $user->refresh()->account->payments()->latest()->first();
-            $this->assertEquals($payment->account_uuid, $user->account->uuid);
-            $this->assertDatabaseHas('payments', ['account_uuid' => $user->refresh()->account->uuid]);
-        }
+        $this->assertIsArray($operations);
     }
 }

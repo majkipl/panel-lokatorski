@@ -16,21 +16,17 @@ use Tests\TestCase;
 
 class SendDailyExpensesTest extends TestCase
 {
-    use DatabaseTransactions;
-
     #[Test]
     public function testHandleSendsExpensesEmails()
     {
-        // Mocking dependencies
+        // Arrange
         $queryBus = Mockery::mock(QueryBus::class);
         $expenseProjector = Mockery::mock(ExpenseProjector::class);
 
-        // Mock data
         $user1 = new User(['email' => 'user1@example.com', 'account' => new Account(['uuid' => 'uuid1'])]);
         $user2 = new User(['email' => 'user2@example.com', 'account' => new Account(['uuid' => 'uuid2'])]);
         $users = [$user1, $user2];
 
-        // Expectations
         $queryBus->shouldReceive('ask')->once()->andReturn($users);
         $expenseProjector->shouldReceive('getTodaysExpenses')->times(count($users))->andReturn([]);
 
@@ -40,7 +36,7 @@ class SendDailyExpensesTest extends TestCase
         // Creating SendDailyExpenses instance
         $command = new SendDailyExpenses();
 
-        // Execution
+        // Act
         $command->handle($queryBus, $expenseProjector);
 
         // Assertions

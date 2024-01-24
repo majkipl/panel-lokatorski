@@ -11,11 +11,13 @@ class FindLatestBillingByAccountUuidQueryTest extends TestCase
     #[Test]
     public function testConstructor()
     {
+        // Arrange
         $uuid = fake()->uuid();
-        // Create an instance of the query
+
+        // Act
         $query = new FindLatestBillingByAccountUuidQuery($uuid);
 
-        // Assert the UUID is set correctly
+        // Assert
         $this->assertEquals($uuid, $query->getUuid());
     }
 }

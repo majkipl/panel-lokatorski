@@ -3,20 +3,21 @@
 namespace Tests\Domains\Payment\Application\Queries\FindLatestPaymentByAccountUuid;
 
 use App\Domains\Payment\Application\Queries\FindLatestPaymentByAccountUuid\FindLatestPaymentByAccountUuidQuery;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindLatestPaymentByAccountUuidQueryTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testConstructionAndGetters()
     {
+        // Arrange
         $uuid = fake()->uuid();
 
+        // Act
         $query = new FindLatestPaymentByAccountUuidQuery($uuid);
 
+        // Assert
         $this->assertInstanceOf(FindLatestPaymentByAccountUuidQuery::class, $query);
         $this->assertEquals($uuid, $query->getUuid());
     }

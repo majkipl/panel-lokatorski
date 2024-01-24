@@ -8,37 +8,31 @@ use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindUsersByStatusAndRoleHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock UserRepositoryInterface
-        $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
+        // Arrange
         $roles = [UserRole::ADMIN->value, UserRole::USER->value];
         $status = UserStatus::ACTIVE->value;
 
-        // Set up expectations
+        $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
         $userRepositoryMock->expects($this->once())
             ->method('getUsersByStatusAndRole')
             ->with(
-                $this->equalTo($roles),  // Example roles
-                $this->equalTo($status)              // Example status
+                $this->equalTo($roles),
+                $this->equalTo($status)
             )
-            ->willReturn(new Collection()); // Example return value
+            ->willReturn(new Collection());
 
-        // Create FindUsersByStatusAndRoleHandler instance with mocked repository
         $handler = new FindUsersByStatusAndRoleHandler($userRepositoryMock);
-
-        // Create example query
         $query = new FindUsersByStatusAndRoleQuery($roles, $status);
 
-        // Call handle method and assert the return value
+        // Act & Assert
         $this->assertInstanceOf(Collection::class, $handler->handle($query));
     }
 }

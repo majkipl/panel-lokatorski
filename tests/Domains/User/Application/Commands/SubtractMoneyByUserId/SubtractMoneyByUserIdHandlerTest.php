@@ -4,39 +4,29 @@ namespace Tests\Domains\User\Application\Commands\SubtractMoneyByUserId;
 
 use App\Domains\User\Application\Commands\SubtractMoneyByUserId\SubtractMoneyByUserIdCommand;
 use App\Domains\User\Application\Commands\SubtractMoneyByUserId\SubtractMoneyByUserIdHandler;
-use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SubtractMoneyByUserIdHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock UserRepositoryInterface
-        $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
+        // Arrange
+        $id = fake()->randomNumber();
+        $amount = fake()->randomFloat();
+        $command = new SubtractMoneyByUserIdCommand($id, $amount);
+        $repositoryMock = Mockery::mock(UserRepositoryInterface::class);
+        $repositoryMock->shouldReceive('subtractMoney')->with($id, $amount)->once();
+        $handler = new SubtractMoneyByUserIdHandler($repositoryMock);
 
-        $user = User::factory()->create();
-        $amount = fake()->randomFloat(2);
-
-        // Set up expectations
-        $userRepositoryMock->expects($this->once())
-            ->method('subtractMoney')
-            ->with(
-                $this->equalTo($user->id),  // Example user ID
-                $this->equalTo($amount) // Example amount
-            );
-
-        // Create SubtractMoneyByUserIdHandler instance with mocked repository
-        $handler = new SubtractMoneyByUserIdHandler($userRepositoryMock);
-
-        // Create example command
-        $command = new SubtractMoneyByUserIdCommand($user->id, $amount);
-
-        // Call handle method
+        // Act
         $handler->handle($command);
+
+        // Assert
+        // As the handle method does not return a value, we can only assert that no exceptions were thrown
+        $this->addToAssertionCount(1);
     }
 }

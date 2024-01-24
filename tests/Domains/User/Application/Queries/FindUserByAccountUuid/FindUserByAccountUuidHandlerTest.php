@@ -6,33 +6,28 @@ use App\Domains\User\Application\Queries\FindUserByAccountUuid\FindUserByAccount
 use App\Domains\User\Application\Queries\FindUserByAccountUuid\FindUserByAccountUuidQuery;
 use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Domain\Repositories\AccountRepositoryInterface;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindUserByAccountUuidHandlerTest extends TestCase
 {
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock AccountRepositoryInterface
-        $accountRepositoryMock = $this->createMock(AccountRepositoryInterface::class);
-
+        // Arrange
         $uuid = fake()->uuid();
-
-        // Set up expectations
+        $accountRepositoryMock = $this->createMock(AccountRepositoryInterface::class);
         $accountRepositoryMock->expects($this->once())
             ->method('getUserByAccountUuid')
             ->with(
-                $this->equalTo($uuid) // Example UUID
+                $this->equalTo($uuid)
             )
-            ->willReturn(new User()); // Example return value
+            ->willReturn(new User());
 
-        // Create FindUserByAccountUuidHandler instance with mocked repository
         $handler = new FindUserByAccountUuidHandler($accountRepositoryMock);
-
-        // Create example query
         $query = new FindUserByAccountUuidQuery($uuid);
 
-        // Call handle method and assert the return value
+        // Act & Assert
         $this->assertInstanceOf(User::class, $handler->handle($query));
     }
 }

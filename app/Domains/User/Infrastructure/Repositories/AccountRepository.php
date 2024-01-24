@@ -45,9 +45,39 @@ class AccountRepository implements AccountRepositoryInterface
      */
     public function getAccountByUserRoleAndStatus(string $status, array $role): Collection
     {
-        return $this->model->whereHas('user', function ($query) use($status, $role){
+        return $this->model->whereHas('user', function ($query) use ($status, $role) {
             $query->whereIn('role', $role)
                 ->where('status', $status);
         })->get();
+    }
+
+    /**
+     * @param int $id
+     * @return bool
+     */
+    public function isExistAccountByUserId(int $id): bool
+    {
+        return $this->model->where('user_id', $id)->exists();
+    }
+
+    /**
+     * @param array $attributes
+     * @return bool
+     */
+    public function save(array $attributes = []): bool
+    {
+        return (new Account($attributes))->writeable()->save();
+    }
+
+    /**
+     * @param int $id
+     * @param float $balance
+     * @return bool
+     */
+    public function updateBalanceByUserId(int $id, float $balance): bool
+    {
+        $account = $this->model->where('user_id', $id)->first();
+        $account->balance = $balance;
+        return $account->writeable()->save();
     }
 }

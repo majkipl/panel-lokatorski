@@ -8,20 +8,16 @@ use App\Domains\User\Application\DTO\UserDTO;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CreateUserHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock UserRepositoryInterface
-        $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
-
+        // Arrange
         $email = fake()->safeEmail();
         $firstname = fake()->firstName();
         $lastname = fake()->lastName();
@@ -29,7 +25,7 @@ class CreateUserHandlerTest extends TestCase
         $status = UserStatus::ACTIVE;
         $role = UserRole::USER;
 
-        // Set up expectations
+        $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
         $userRepositoryMock->expects($this->once())
             ->method('create')
             ->with(
@@ -44,9 +40,8 @@ class CreateUserHandlerTest extends TestCase
                         true; // Return true if all checks pass
                 })
             )
-            ->willReturn(true); // Example return value
+            ->willReturn(true);
 
-        // Create CreateUserHandler instance with mocked repository
         $handler = new CreateUserHandler($userRepositoryMock);
 
         // Create example DTO
@@ -59,10 +54,9 @@ class CreateUserHandlerTest extends TestCase
             role: $role,
         );
 
-        // Create example command
         $command = new CreateUserCommand($userDTO);
 
-        // Call handle method and assert the return value
+        // Act & Assert
         $this->assertTrue($handler->handle($command));
     }
 }

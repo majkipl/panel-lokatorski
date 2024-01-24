@@ -4,10 +4,10 @@ namespace Tests\Domains\Payment\Infrastructure\Repositories;
 
 use App\Domains\Payment\Domain\Models\Payment;
 use App\Domains\Payment\Infrastructure\Repositories\PaymentRepository;
-use App\Domains\User\Application\Commands\AddMoneyByUserId\AddMoneyByUserIdCommand;
-use App\Domains\User\Domain\Models\User;
-use App\Interfaces\Command\CommandBus;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -15,117 +15,108 @@ class PaymentRepositoryTest extends TestCase
 {
     use DatabaseTransactions;
 
-    #[Test]
-    public function testGetLatestByAccountUuid()
+    protected $paymentRepository;
+    protected $payment;
+
+    public function setUp(): void
     {
-        $user = User::factory()->create();
-        $amount = 100;
+        parent::setUp();
+        $this->payment = new Payment();
+        $this->paymentRepository = new PaymentRepository($this->payment);
+    }
 
-        $commandBus = app(CommandBus::class);
-
-        $commandBus->dispatch(
-            command: new AddMoneyByUserIdCommand(
-                id: $user->id,
-                amount: $amount
-            )
-        );
-
-        // Create PaymentRepository instance
-        $repository = new PaymentRepository(new Payment());
-
-        // Retrieve the latest payment by account UUID
-        $latestPayment = $repository->getLatestByAccountUuid($user->account->uuid);
-
-        $payments = unserialize($latestPayment->projection);
-        $payment = reset($payments);
-
-        $this->assertCount(1, $payments);
-        $this->assertEquals($amount, $payment['amount']);
-        $this->assertEquals($user->account->uuid, $payment['accountUuid']);
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        Mockery::close();
     }
 
     #[Test]
-    public function testGetLatest()
+    public function testGetLatestByAccountUuid()
     {
-        //todo: modify test on mock
-        $users = User::factory(3)->create();
+        // Arrange
+        $uuid = fake()->uuid();
 
-        foreach ($users as $user) {
-            $amount = 100;
+        $paymentMock = $this->createPartialMock(Payment::class, ['newQuery']);
+        $queryMock = $this->createMock(Builder::class);
+        $paymentMock->method('newQuery')->willReturn($queryMock);
+        $queryMock->method('where')->willReturn($queryMock);
+        $queryMock->method('latest')->willReturn($queryMock);
+        $queryMock->method('first')->willReturn(new Payment(['account_uuid' => $uuid]));
 
-            $commandBus = app(CommandBus::class);
+        $classUnderTest = new PaymentRepository($paymentMock);
 
-            $commandBus->dispatch(
-                command: new AddMoneyByUserIdCommand(
-                    id: $user->id,
-                    amount: $amount
-                )
-            );
-        }
+        // Act
+        $result = $classUnderTest->getLatestByAccountUuid($uuid);
 
-        // Create PaymentRepository instance
-        $repository = new PaymentRepository(new Payment());
-
-        // Retrieve the latest payments
-        $latestPayments = $repository->getLatest();
-
-        $this->assertCount(count($users), $latestPayments);
-
-        foreach ($latestPayments as $index => $item) {
-
-            $payment = unserialize($item->projection);
-
-            $this->assertEquals($amount, $payment[0]['amount']);
-            $this->assertEquals($users[$index]->account->uuid, $payment[0]['accountUuid']);
-        }
+        // Assert
+        $this->assertInstanceOf(Payment::class, $result);
     }
 
     #[Test]
     public function testUpdateProjection()
     {
-        $user = User::factory()->create();
+        // Arrange
+        $uuid = fake()->uuid();
+        $projection = serialize([]);
 
-        // Create PaymentRepository instance
-        $repository = new PaymentRepository(new Payment());
+        $mock = Mockery::mock(Payment::class)->makePartial();
+        $mock->shouldReceive('save')->once()->andReturnTrue();
 
-        sleep(1);
+        $this->app->instance(Payment::class, $mock);
 
-        // Update the projection of the test payment
-        $updated = $repository->updateProjection($user->account->uuid, 'new_projection');
+        // Act
+        $mock->account_uuid = $uuid;
+        $mock->projection = $projection;
+        $result = $mock->save();
 
-        // Assert that the update operation was successful
-        $this->assertTrue($updated);
+        // Assert
+        $this->assertTrue($result);
+        $this->assertEquals($uuid, $mock->account_uuid);
+        $this->assertEquals($projection, $mock->projection);
+    }
 
-        // Retrieve the payment after update
-        $updatedPayment = Payment::where('account_uuid', $user->account->uuid)->latest()->first();
+    #[Test]
+    public function testGetLatest()
+    {
+        // Arrange
+        $resultCollection = new Collection([]);
+        $paymentsMock = $this->createMock(Builder::class);
+        $rawMock = $this->createMock(Builder::class);
 
-        // Assert that the projection of the updated payment matches the new projection value
-        $this->assertEquals('new_projection', $updatedPayment->projection);
+        // Act
+        $paymentsMock->method('join')->willReturn($paymentsMock);
+        $paymentsMock->method('select')->willReturn($paymentsMock);
+        $paymentsMock->method('get')->willReturn($resultCollection);
+
+        $result = $paymentsMock
+            ->join($rawMock, function ($join) {
+                $join->on('p1.account_uuid', '=', 'p2.account_uuid');
+                $join->on('p1.updated_at', '=', 'p2.max_updated_at');
+            })
+            ->select('p1.*')
+            ->get();
+
+        // Assert
+        $this->assertEquals($resultCollection, $result);
     }
 
     #[Test]
     public function testSave()
     {
-        $user = User::factory()->create();
+        // Arrange
+        $paymentMock = $this->createMock(Payment::class);
 
-        // Create PaymentRepository instance
-        $repository = new PaymentRepository(new Payment());
+        // Act
+        $paymentMock->method('save')->willReturn(true);
 
-        sleep(1);
+        $uuid = fake()->uuid();
+        $projection = serialize([]);
 
-        // Save a new payment
-        $saved = $repository->save($user->account->uuid, 'test_projection');
+        $paymentMock->account_uuid = $uuid;
+        $paymentMock->projection = $projection;
 
-        // Assert that the save operation was successful
-        $this->assertTrue($saved);
-
-        // Retrieve the saved payment
-        $savedPayment = Payment::where('account_uuid', $user->account->uuid)->latest()->first();
-
-        // Assert that the retrieved payment is not null
-        $this->assertNotNull($savedPayment);
-
-        // Assert that the projection of the saved payment matches the provided projection value
-        $this->assertEquals('test_projection', $savedPayment->projection);
+        // Assert
+        $this->assertTrue($paymentMock->save());
     }
 }

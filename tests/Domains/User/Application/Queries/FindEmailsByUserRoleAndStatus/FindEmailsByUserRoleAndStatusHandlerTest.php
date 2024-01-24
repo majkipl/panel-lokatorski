@@ -8,15 +8,12 @@ use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindEmailsByUserRoleAndStatusHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
     protected UserRepositoryInterface $userRepository;
     protected FindEmailsByUserRoleAndStatusHandler $handler;
 
@@ -24,7 +21,6 @@ class FindEmailsByUserRoleAndStatusHandlerTest extends TestCase
     {
         parent::setUp();
 
-        // Mocking UserRepositoryInterface
         $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
         $this->handler = new FindEmailsByUserRoleAndStatusHandler($this->userRepository);
     }
@@ -38,36 +34,33 @@ class FindEmailsByUserRoleAndStatusHandlerTest extends TestCase
     #[Test]
     public function testHandleReturnsArrayOfEmails()
     {
-        // Mock data
-        $emails = ['user1@example.com', 'user2@example.com'];
+        // Arrange
+        $emails = [fake()->safeEmail(), fake()->safeEmail()];
         $query = new FindEmailsByUserRoleAndStatusQuery(UserStatus::ACTIVE, [UserRole::ADMIN, UserRole::USER]);
 
-        // Expectations
         $this->userRepository->shouldReceive('getUsersByStatusAndRole')->once()->andReturn(new Collection([
-            ['email' => 'user1@example.com', 'status' => UserStatus::ACTIVE->value, 'role' => UserRole::ADMIN->value],
-            ['email' => 'user2@example.com', 'status' => UserStatus::ACTIVE->value, 'role' => UserRole::USER->value],
+            ['email' => $emails[0], 'status' => UserStatus::ACTIVE->value, 'role' => UserRole::ADMIN->value],
+            ['email' => $emails[1], 'status' => UserStatus::ACTIVE->value, 'role' => UserRole::USER->value],
         ]));
 
-        // Execution
+        // Act
         $result = $this->handler->handle($query);
 
-        // Assertions
+        // Assert
         $this->assertEquals($emails, $result);
     }
 
     #[Test]
     public function testHandleReturnsEmptyArrayWhenNoUsersFound()
     {
-        // Mock data
+        // Arrange
         $query = new FindEmailsByUserRoleAndStatusQuery(UserStatus::ACTIVE, [UserRole::ADMIN, UserRole::USER]);
-
-        // Expectations
         $this->userRepository->shouldReceive('getUsersByStatusAndRole')->once()->andReturn(new Collection([]));
 
-        // Execution
+        // Act
         $result = $this->handler->handle($query);
 
-        // Assertions
+        // Assert
         $this->assertEmpty($result);
     }
 }

@@ -5,43 +5,39 @@ namespace Tests\Domains\User\Application\Queries\FindEmailsByUserRoleAndStatus;
 use App\Domains\User\Application\Queries\FindEmailsByUserRoleAndStatus\FindEmailsByUserRoleAndStatusQuery;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindEmailsByUserRoleAndStatusQueryTest extends TestCase
 {
-    use DatabaseTransactions;
-
     #[Test]
     public function testValidQueryCreation()
     {
-        // Given
+        // Arrange
         $status = UserStatus::ACTIVE;
         $roles = [UserRole::ADMIN, UserRole::USER];
 
-        // When
+        // Act
         $query = new FindEmailsByUserRoleAndStatusQuery(
             status: $status,
             role: $roles
         );
 
-        // Then
+        // Assert
         $this->assertInstanceOf(FindEmailsByUserRoleAndStatusQuery::class, $query);
     }
 
     #[Test]
     public function testInvalidQueryCreationWithInvalidRole()
     {
-        // Given
+        // Arrange
         $status = UserStatus::ACTIVE;
         $invalidRoles = ['invalid_role'];
 
-        // Then
+        // Act & Assert
         $this->expectException(InvalidArgumentException::class);
 
-        // When
         new FindEmailsByUserRoleAndStatusQuery(
             status: $status,
             role: $invalidRoles
@@ -51,7 +47,7 @@ class FindEmailsByUserRoleAndStatusQueryTest extends TestCase
     #[Test]
     public function testGetStatus()
     {
-        // Given
+        // Arrange
         $status = UserStatus::ACTIVE;
         $roles = [UserRole::ADMIN, UserRole::USER];
         $query = new FindEmailsByUserRoleAndStatusQuery(
@@ -59,10 +55,10 @@ class FindEmailsByUserRoleAndStatusQueryTest extends TestCase
             role: $roles
         );
 
-        // When
+        // Act
         $result = $query->getStatus();
 
-        // Then
+        // Assert
         $this->assertInstanceOf(UserStatus::class, $result);
         $this->assertEquals($status, $result);
     }
@@ -70,7 +66,7 @@ class FindEmailsByUserRoleAndStatusQueryTest extends TestCase
     #[Test]
     public function testGetRole()
     {
-        // Given
+        // Arrange
         $status = UserStatus::ACTIVE;
         $roles = [UserRole::ADMIN, UserRole::USER];
         $query = new FindEmailsByUserRoleAndStatusQuery(
@@ -78,10 +74,10 @@ class FindEmailsByUserRoleAndStatusQueryTest extends TestCase
             role: $roles
         );
 
-        // When
+        // Act
         $result = $query->getRole();
 
-        // Then
+        // Assert
         $this->assertIsArray($result);
         $this->assertCount(2, $result);
 

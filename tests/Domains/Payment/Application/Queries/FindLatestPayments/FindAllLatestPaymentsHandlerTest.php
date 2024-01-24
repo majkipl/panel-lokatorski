@@ -4,23 +4,18 @@ namespace Tests\Domains\Payment\Application\Queries\FindLatestPayments;
 
 use App\Domains\Payment\Application\Queries\FindLatestPayments\FindAllLatestPaymentsHandler;
 use App\Domains\Payment\Application\Queries\FindLatestPayments\FindAllLatestPaymentsQuery;
-use App\Domains\Payment\Domain\Models\Payment;
 use App\Domains\Payment\Domain\Repositories\PaymentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindAllLatestPaymentsHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock PaymentRepositoryInterface
+        // Arrange
         $repositoryMock = $this->createMock(PaymentRepositoryInterface::class);
-
-        // Set up expectations
         $repositoryMock->expects($this->once())
             ->method('getLatest')
             ->willReturn(new Collection([
@@ -34,16 +29,13 @@ class FindAllLatestPaymentsHandlerTest extends TestCase
                 ])]
             ]));
 
-        // Create FindAllLatestPaymentsHandler instance with mocked repository
         $handler = new FindAllLatestPaymentsHandler($repositoryMock);
-
-        // Create example query
         $query = new FindAllLatestPaymentsQuery();
 
-        // Call handle method and assert the return value
+        // Act
         $result = $handler->handle($query);
 
-        // Assert that the returned array contains correct payments in correct order
+        // Assert
         $this->assertEquals([
             ['created_at' => '2024-05-04 18:00:00', 'amount' => 250],
             ['created_at' => '2024-05-03 15:00:00', 'amount' => 200],

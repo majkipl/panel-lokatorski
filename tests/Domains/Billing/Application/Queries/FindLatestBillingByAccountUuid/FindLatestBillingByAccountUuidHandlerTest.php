@@ -14,24 +14,17 @@ class FindLatestBillingByAccountUuidHandlerTest extends TestCase
     #[Test]
     public function testHandle()
     {
+        // Arrange
         $exampleProjection = fake()->sentence();
-
-        // Mock the BillingRepositoryInterface
         $repository = $this->createMock(BillingRepositoryInterface::class);
-
-        // Mock the return value of the getLatestByAccountUuid method
         $repository->method('getLatestByAccountUuid')->willReturn(new Billing(['projection' => $exampleProjection]));
-
-        // Create an instance of the handler with the mocked repository
         $handler = new FindLatestBillingByAccountUuidHandler($repository);
-
-        // Create an instance of the query
         $query = new FindLatestBillingByAccountUuidQuery(fake()->uuid());
 
-        // Call the handle method
+        // Act
         $result = $handler->handle($query);
 
-        // Assert the result is correct
+        // Assert
         $this->assertEquals($exampleProjection, $result);
     }
 }

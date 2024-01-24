@@ -6,28 +6,26 @@ use App\Domains\User\Application\Queries\FindAllUsers\FindAllUsersHandler;
 use App\Domains\User\Application\Queries\FindAllUsers\FindAllUsersQuery;
 use App\Domains\User\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindAllUsersHandlerTest extends TestCase
 {
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function testHandle()
     {
-        // Mock UserRepositoryInterface
+        // Arrange
         $userRepositoryMock = $this->createMock(UserRepositoryInterface::class);
 
-        // Set up expectations
         $userRepositoryMock->expects($this->once())
             ->method('getAllUsers')
-            ->willReturn(new Collection()); // Example return value
+            ->willReturn(new Collection());
 
-        // Create FindAllUsersHandler instance with mocked repository
         $handler = new FindAllUsersHandler($userRepositoryMock);
 
-        // Create example query
         $query = new FindAllUsersQuery();
 
-        // Call handle method and assert the return value
+        // Act & Assert
         $this->assertInstanceOf(Collection::class, $handler->handle($query));
     }
 }

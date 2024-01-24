@@ -5,10 +5,12 @@ namespace Tests\Domains\User\Infrastructure\Repositories;
 use App\Domains\User\Application\DTO\UserDTO;
 use App\Domains\User\Domain\Enums\UserRole;
 use App\Domains\User\Domain\Enums\UserStatus;
+use App\Domains\User\Domain\Models\Account;
 use App\Domains\User\Domain\Models\User;
 use App\Domains\User\Infrastructure\Repositories\UserRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Support\Str;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -17,186 +19,188 @@ class UserRepositoryTest extends TestCase
     use DatabaseTransactions;
 
     #[Test]
-    public function test_get_all_users()
+    public function testGetAllUsers()
     {
-        //todo: modify test on mock
+        // Arrange
+        $mock = Mockery::mock(User::class);
+        $mock->shouldReceive('all')->once()->andReturn(new Collection([]));
+        $this->app->instance(User::class, $mock);
 
-        // Create some users
-        User::factory()->count(3)->create();
+        $classUnderTest = new UserRepository($mock);
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
+        // Act
+        $result = $classUnderTest->getAllUsers();
 
-        // Get all users
-        $users = $repository->getAllUsers();
-
-        // Assert that the number of retrieved users matches the number created
-        $this->assertCount(3, $users);
+        // Assert
+        $this->assertInstanceOf(Collection::class, $result);
     }
 
     #[Test]
-    public function test_get_users_by_status_and_role()
+    public function testGetUsersByStatusAndRole()
     {
-        //todo: modify test on mock
+        // Arrange
+        $role = [UserRole::ADMIN->value, UserRole::USER->value];
 
-        // Create some users with specific roles and statuses
-        $user1 = User::factory()->create(['role' => 'admin', 'status' => 'active']);
-        $user2 = User::factory()->create(['role' => 'user', 'status' => 'active']);
-        $user3 = User::factory()->create(['role' => 'admin', 'status' => 'inactive']);
+        $mock = Mockery::mock(User::class);
+        $mock->shouldReceive('when')
+            ->withArgs(function ($status) {
+                return !is_null($status);
+            }, Mockery::on(function ($callback) {
+                return is_callable($callback);
+            }))
+            ->andReturnSelf();
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
+        $mock->shouldReceive('whereIn')
+            ->with('role', $role)
+            ->andReturnSelf();
 
-        // Get users with specific role and status
-        $users = $repository->getUsersByStatusAndRole(['admin'], 'active');
+        $mock->shouldReceive('get')
+            ->once()
+            ->andReturn(new Collection([]));
 
-        // Assert that the correct users are retrieved
-        $this->assertCount(1, $users);
-        $this->assertEquals($user1->id, $users->first()->id);
+        $this->app->instance(User::class, $mock);
+
+        $classUnderTest = new UserRepository($mock);
+
+        // Act
+        $result = $classUnderTest->getUsersByStatusAndRole($role, UserStatus::ACTIVE->value);
+
+        // Assert
+        $this->assertInstanceOf(Collection::class, $result);
     }
 
     #[Test]
-    public function test_update_user_status()
+    public function testUpdateStatus()
     {
-        // Create a user
-        $user = User::factory()->create();
+        // Arrange
+        $user_id = fake()->randomNumber();
+        $status = UserStatus::ACTIVE->value;
+        $mock = Mockery::mock(User::class);
+        $mock->shouldReceive('find')->with($user_id)->andReturnSelf();
+        $mock->shouldReceive('save')->once()->andReturnTrue();
+        $mock->shouldReceive('setAttribute')->withAnyArgs()->andReturnNull();
+        $this->app->instance(User::class, $mock);
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
+        $classUnderTest = new UserRepository($mock);
 
-        // New status
-        $newStatus = 'inactive';
+        // Act
+        $result = $classUnderTest->updateStatus($user_id, $status);
 
-        // Update user status
-        $updated = $repository->updateStatus($user->id, $newStatus);
-
-        // Assert that the update was successful
-        $this->assertTrue($updated);
-
-        // Retrieve the user from the database
-        $updatedUser = User::find($user->id);
-
-        // Assert that the user's status has been updated
-        $this->assertEquals($newStatus, $updatedUser->status);
+        // Assert
+        $this->assertTrue($result);
     }
 
     #[Test]
-    public function test_get_account_by_user_id()
+    public function testGetAccountByUserId()
     {
-        // Create a user with an associated account
-        $user = User::factory()->create();
+        // Arrange
+        $user_id = fake()->randomNumber();
+        $accountMock = Mockery::mock(Account::class);
+        $userMock = Mockery::mock(User::class);
+        $userMock->shouldReceive('find')->with($user_id)->andReturnSelf();
+        $userMock->shouldReceive('getAttribute')->with('account')->andReturn($accountMock);
+        $this->app->instance(User::class, $userMock);
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
+        $classUnderTest = new UserRepository($userMock);
 
-        // Get user's account
-        $retrievedAccount = $repository->getAccountByUserId($user->id);
+        // Act
+        $result = $classUnderTest->getAccountByUserId($user_id);
 
-        // Assert that the retrieved account belongs to the correct user
-        $this->assertEquals($user->account->id, $retrievedAccount->id);
-        $this->assertEquals($user->account->user_id, $user->id);
+        // Assert
+        $this->assertInstanceOf(Account::class, $result);
     }
 
     #[Test]
-    public function test_add_money_to_user_account()
+    public function testAddExpense()
     {
-        // Create a user with an associated account
-        $user = User::factory()->create();
+        // Arrange
+        $user_id = fake()->randomNumber();
+        $name = fake()->word();
+        $amount = fake()->randomFloat(2);
+        $accountMock = Mockery::mock(Account::class);
+        $accountMock->shouldReceive('addExpense')->with($name, $amount)->once();
+        $userMock = Mockery::mock(User::class);
+        $userMock->shouldReceive('find')->with($user_id)->andReturnSelf();
+        $userMock->shouldReceive('getAttribute')->with('account')->andReturn($accountMock);
+        $this->app->instance(User::class, $userMock);
 
-        // Initial balance
-        $initialBalance = $user->account->balance;
+        $classUnderTest = new UserRepository($userMock);
 
-        // Amount to add
-        $amountToAdd = 100.50;
+        // Act
+        $classUnderTest->addExpense($user_id, $name, $amount);
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
-
-        // Add money to user's account
-        $repository->addMoney($user->id, $amountToAdd);
-
-        // Assert that the balance has been updated correctly
-        $this->assertEquals($initialBalance + $amountToAdd, $user->account->refresh()->balance);
+        // Assert
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
     }
 
     #[Test]
-    public function test_subtract_money_from_user_account()
+    public function testAddMoney()
     {
-        // Create a user with an associated account
-        $user = User::factory()->create();
+        // Arrange
+        $user_id = fake()->randomNumber();
+        $amount = fake()->randomFloat(2);
+        $accountMock = Mockery::mock(Account::class);
+        $accountMock->shouldReceive('addMoney')->with($amount)->once();
+        $userMock = Mockery::mock(User::class);
+        $userMock->shouldReceive('find')->with($user_id)->andReturnSelf();
+        $userMock->shouldReceive('getAttribute')->with('account')->andReturn($accountMock);
+        $this->app->instance(User::class, $userMock);
 
-        // Initial balance
-        $initialBalance = $user->account->balance;
+        $classUnderTest = new UserRepository($userMock);
 
-        // Amount to subtract (ensure it's less than the initial balance)
-        $amountToSubtract = 50.25;
+        // Act
+        $classUnderTest->addMoney($user_id, $amount);
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
-
-        // Subtract money from user's account
-        $repository->subtractMoney($user->id, $amountToSubtract);
-
-        // Assert that the balance has been updated correctly
-        $this->assertEquals($initialBalance - $amountToSubtract, $user->account->refresh()->balance);
+        // Assert
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
     }
 
     #[Test]
-    public function test_create_new_user()
+    public function testSubtractMoney()
     {
-        $email = fake()->safeEmail();
-        $firstname = fake()->firstName();
-        $lastname = fake()->lastName();
-        $password = Str::password(10);
-        $status = UserStatus::ACTIVE;
-        $role = UserRole::USER;
-        $email_verified_at = now();
-        $remember_token = 'random_token';
-        $created_at = now();
-        $updated_at = now();
-        $last_login_at = now();
+        // Arrange
+        $user_id = fake()->randomNumber();
+        $amount = fake()->randomFloat(2);
+        $accountMock = Mockery::mock(Account::class);
+        $accountMock->shouldReceive('subtractMoney')->with($amount)->once();
+        $userMock = Mockery::mock(User::class);
+        $userMock->shouldReceive('find')->with($user_id)->andReturnSelf();
+        $userMock->shouldReceive('getAttribute')->with('account')->andReturn($accountMock);
+        $this->app->instance(User::class, $userMock);
 
-        // Create UserDTO object with dummy data
-        $userDTO = new UserDTO(
-            email: $email,
-            firstname: $firstname,
-            lastname: $lastname,
-            password: bcrypt($password),
-            status: $status,
-            role: $role,
-            email_verified_at: $email_verified_at,
-            remember_token: $remember_token,
-            created_at: $created_at,
-            updated_at: $updated_at,
-            last_login_at: $last_login_at
+        $classUnderTest = new UserRepository($userMock);
+
+        // Act
+        $classUnderTest->subtractMoney($user_id, $amount);
+
+        // Assert
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
+    }
+
+    #[Test]
+    public function testCreateUser()
+    {
+        // Arrange
+        $userMock = Mockery::mock(User::class);
+        $userMock->shouldReceive('setAttribute')->withAnyArgs()->andReturnNull();
+        $userMock->shouldReceive('save')->once()->andReturnTrue();
+        $this->app->instance(User::class, $userMock);
+
+        $dto = new UserDTO(
+            email: fake()->safeEmail(),
+            firstname: fake()->firstName(),
+            lastname: fake()->lastName(),
+            password: fake()->word(),
+            status: UserStatus::ACTIVE,
+            role: UserRole::USER,
         );
 
-        // Create repository instance
-        $repository = new UserRepository(new User());
+        $classUnderTest = new UserRepository($userMock);
 
-        // Call the create method
-        $created = $repository->create($userDTO);
+        // Act
+        $result = $classUnderTest->create($dto);
 
-        // Assert that the user was created successfully
-        $this->assertTrue($created);
-
-        // Retrieve the created user from the database
-        $createdUser = User::where('email', $email)->first();
-
-        // Assert that the user exists in the database
-        $this->assertNotNull($createdUser);
-
-        // Assert that the user's attributes match the DTO data
-        $this->assertEquals($email, $createdUser->email);
-        $this->assertEquals($firstname, $createdUser->firstname);
-        $this->assertEquals($lastname, $createdUser->lastname);
-        $this->assertTrue(password_verify($password, $createdUser->password));
-        $this->assertEquals($status->value, $createdUser->status);
-        $this->assertEquals($role->value, $createdUser->role);
-        $this->assertNotNull($createdUser->email_verified_at);
-        $this->assertEquals($remember_token, $createdUser->remember_token);
-        $this->assertEquals($created_at->format('Y-m-d H:i:s'), $createdUser->created_at->format('Y-m-d H:i:s'));
-        $this->assertEquals($updated_at->format('Y-m-d H:i:s'), $createdUser->updated_at->format('Y-m-d H:i:s'));
-        $this->assertEquals($last_login_at->format('Y-m-d H:i:s'), $createdUser->last_login_at);
+        // Assert
+        $this->assertTrue($result);
     }
 }

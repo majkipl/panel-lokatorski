@@ -6,18 +6,15 @@ use App\Domains\Balance\Application\Queries\FindLatestBalanceByAccountUuid\FindL
 use App\Domains\Balance\Application\Queries\FindLatestBalanceByAccountUuid\FindLatestBalanceByAccountUuidQuery;
 use App\Domains\Balance\Domain\Models\Balance;
 use App\Domains\Balance\Domain\Repositories\BalanceRepositoryInterface;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FindLatestBalanceByAccountUuidHandlerTest extends TestCase
 {
-    use DatabaseTransactions;
-
     #[Test]
     public function testHandle()
     {
-        // Given
+        // Arrange
         $uuid = fake()->uuid();
         $expectedProjection = fake()->word();
 
@@ -28,10 +25,10 @@ class FindLatestBalanceByAccountUuidHandlerTest extends TestCase
 
         $handler = new FindLatestBalanceByAccountUuidHandler($repository);
 
-        // When
+        // Act
         $result = $handler->handle($query);
 
-        // Then
+        // Assert
         $this->assertSame($expectedProjection, $result);
     }
 }
