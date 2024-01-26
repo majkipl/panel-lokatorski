@@ -2315,6 +2315,15 @@ class FillSeeder extends Seeder
             createdAt: "2024-04-10 09:53:14"
         );
 
+        $this->addedExpense(
+            name: "PŁYN DO NACZYŃ",
+            amount: 15,
+            accountUuid: $uuid_6,
+            eventClass: ExpenseAdded::class,
+            participants: [$uuid_6, $uuid_5, $uuid_1],
+            createdAt: "2024-05-07 17:43:36"
+        );
+
     }
 
     public function addedExpense(string $name, float $amount, string $accountUuid, string $eventClass, array $participants, string $createdAt)

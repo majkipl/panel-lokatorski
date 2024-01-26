@@ -40,7 +40,7 @@
                                                 <div
                                                     class="col-12 col-md-3 d-none d-md-block">{{ $operat['user']->firstname }} {{ $operat['user']->lastname }}</div>
                                                 <div class="col-2 col-sm-1 d-flex justify-content-end">
-                                                    @if(auth()->user()->account->uuid === $operat['accountUuid'])
+                                                    @if(auth()->user()->account->uuid === $operat['accountUuid'] || auth()->user()->role === \App\Domains\User\Domain\Enums\UserRole::ADMIN->value)
                                                         @if(!$operat['canceled'] && now()->format('Y') == $operat['created_year'] && now()->locale('pl')->isoFormat('MMMM') == $operat['created_month'])
                                                             <a href="{{ route('expense.cancel', ['id' => $operat['event_id']]) }}"
                                                                title="{{ strtoupper(__('cancel')) }}: {{ $operat['name'] }}"
