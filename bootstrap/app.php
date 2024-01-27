@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: glob(Application::getInstance()->path('Domains/*/Application/Consoles'), GLOB_ONLYDIR)
     )
     ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('email:send-daily-expenses')->daily()->at('23:30');
+
         $schedule->command('email:send-monthly-billing')
             ->monthly()
             ->when(function () {

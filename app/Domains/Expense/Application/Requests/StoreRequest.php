@@ -21,7 +21,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3',
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|gt:0',
         ];
     }
 
@@ -33,7 +33,8 @@ class StoreRequest extends FormRequest
         return [
             'required' => 'The :attribute field is required.',
             'string' => 'The :attribute field must be an string.',
-            'numeric' => 'The :attribute field must be a number.'
+            'numeric' => 'The :attribute field must be a number.',
+            'gt' => 'The :attribute field must be greater than zero.'
         ];
     }
 }
