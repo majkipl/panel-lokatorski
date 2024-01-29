@@ -6,7 +6,8 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="api-token" content="{{ Auth::check() ? Auth::user()->createToken('authenticated')->plainTextToken : '' }}">
+    <meta name="api-token"
+          content="{{ Auth::check() ? Auth::user()->createToken('authenticated')->plainTextToken : '' }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
@@ -34,7 +35,11 @@
                     </button>
                 </div>
                 <div class="col-9 d-flex float-col align-items-center justify-content-end text-right">
-                    <h1 class="logo">{{ strtoupper(__('tenant panel')) }}</h1>
+                    <div class="logo">
+                        <h1>Legnicka 55B</h1>
+                        <h2>{{ strtoupper(__('tenant panel')) }}</h2>
+                    </div>
+                    <h1 class="logo"></h1>
                 </div>
             </div>
 

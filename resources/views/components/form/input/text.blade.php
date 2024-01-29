@@ -1,9 +1,9 @@
 <div class="row field {{ $classWrapper ?? '' }}">
-    <div class="col-12 d-flex">
+    <div class="col-12">
         <label for="{{ $name }}">{{ ucfirst($label) }}:</label>
     </div>
-    <div class="col-12 d-flex">
-        <div class="d-flex w-lg--auto position-relative d-inline-block">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-6">
+        <div class="d-flex w-100 position-relative">
             @isset($prefix)
                 <span>{{ $prefix }}</span>
             @endisset

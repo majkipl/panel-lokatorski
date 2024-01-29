@@ -62,3 +62,26 @@ a, a:focus, a:hover {
     text-decoration: none;
     color: inherit;
 }
+
+
+.logo {
+    padding: 1rem 0;
+
+    h1 {
+        font-size: 1.52rem;
+        line-height: 1.2;
+
+        @media (min-width: 576px) {
+            font-size: 2rem;
+        }
+    }
+
+    h2 {
+        font-size: 1rem;
+        line-height: 1;
+
+        @media (min-width: 576px) {
+            font-size: 1.32rem;
+        }
+    }
+}
