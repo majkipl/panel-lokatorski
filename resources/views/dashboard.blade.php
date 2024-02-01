@@ -5,13 +5,13 @@
         <div class="row">
             @auth
                 @canany(['isAdmin', 'isUser'])
-                    <div class="col-12 col-xl-4">
+                    <div class="col-12 col-xl-4 mb-4">
                         <div class="drager">
                             <h3>{{ ucfirst(__('current expenses')) }}</h3>
                             <div id="participant"></div>
                         </div>
                     </div>
-                    <div class="col-12 col-xl-8">
+                    <div class="col-12 col-xl-8 mb-4">
                         <div class="drager">
                             <h3>{{ ucfirst(__('balance history')) }}</h3>
                             <div id="balance"></div>

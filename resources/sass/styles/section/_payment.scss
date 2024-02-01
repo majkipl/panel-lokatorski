@@ -5,7 +5,6 @@
 
     .row-year {
         background-color: $grayPearl;
-        border: 1px solid $graySmoke;
         margin-bottom: 1.875rem;
 
         .year-name {
@@ -28,7 +27,6 @@
 
     .row-month {
         background-color: $grayAsh;
-        border: 1px solid $grayCharcoal;
 
         .month-name {
             padding-top: 0.9375rem;
@@ -69,7 +67,6 @@
     }
 
     .row-item {
-        border-bottom: 1px solid $grayAsh;
         margin-bottom: 0.625rem;
         padding-top: 0.3125rem;
         padding-bottom: 0.3125rem;
@@ -97,7 +94,6 @@
     }
 
     .row-head {
-        border-bottom: 2px solid $black;
     }
 
     @media (min-width: 1200px) {

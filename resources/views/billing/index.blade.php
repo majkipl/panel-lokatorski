@@ -17,17 +17,17 @@
             <div class="col-12 table-billing">
                 @foreach($billing->years as $key_year => $b_year)
                     <div class="row row-year">
-                        <div class="col-12 col-xl-1 d-flex align-items-center justify-content-center">
-                            <span class="year-name">{{ $key_year }}</span>
+                        <div class="col-12 col-md-1 d-flex align-items-center justify-content-center year-name">
+                            <span>{{ $key_year }}</span>
                         </div>
-                        <div class="col-12 col-xl-11">
+                        <div class="col-12 col-md-11">
                             @foreach($b_year->months as $key_month => $b_month)
                                 <div class="row row-month">
                                     <div
-                                        class="col-12 col-xl-1 d-flex align-items-center justify-content-center">
-                                        <span class="month-name">{{ $key_month }}</span>
+                                        class="col-12 col-md-1 d-flex align-items-center justify-content-center month-name">
+                                        <span>{{ $key_month }}</span>
                                     </div>
-                                    <div class="col-12 col-xl-11 row-content">
+                                    <div class="col-12 col-md-11 row-content">
                                         <div class="row row-item">
                                             <div class="col-8 col-sm-9 col-md-10 text-start text-sm-end">
                                                 <p class="first-letter-uppercase">{{ __('beginning balance') }} :
