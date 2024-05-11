@@ -18,7 +18,7 @@ Projekt w Laravel 11 - panel zarządzania wspólnymi wydatkami.
 1. Sklonuj repozytorium:
 
 ```
-
+git clone https://github.com/majkipl/panel-lokatorski.git
 ```
 
 2. Przejdź do katalogu projektu:
